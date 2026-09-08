@@ -76,6 +76,7 @@ function ShellInner({ children }: { children: ReactNode }) {
   const toast = useToast();
   const [drawer, setDrawer] = useState(false);
   const [rail, setRail] = useState(true);
+  const [wide, setWide] = useState(false);
   const [cmd, setCmd] = useState(false);
   const [nav, setNav] = useState<NavCounts | null>(null);
 
@@ -99,6 +100,11 @@ function ShellInner({ children }: { children: ReactNode }) {
     } catch {
       /* stay */
     }
+    const mq = window.matchMedia("(min-width: 768px)");
+    const sync = () => setWide(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
   }, []);
 
   useEffect(() => {
@@ -111,15 +117,6 @@ function ShellInner({ children }: { children: ReactNode }) {
       document.body.style.overflow = "";
     };
   }, [drawer, cmd]);
-
-  function persistRail(next: boolean) {
-    setRail(next);
-    try {
-      localStorage.setItem(RAIL_KEY, next ? "1" : "0");
-    } catch {
-      /* stay */
-    }
-  }
 
   function toggleRail() {
     if (desktopRail()) {
@@ -191,22 +188,10 @@ function ShellInner({ children }: { children: ReactNode }) {
                 : "inset-y-3 left-3 -translate-x-[120%] sm:inset-y-4 sm:left-4 md:inset-auto"
             } ${rail ? "md:flex md:translate-x-0" : "md:hidden"}`}
           >
-            <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center">
               <Link href="/admin" className="flex items-center" aria-label="BAS operator">
                 <BasLogo className="h-7 w-auto" />
               </Link>
-              <button
-                type="button"
-                className="bas-mac-icon text-bas-muted hover:bg-bas-card hover:text-bas-heading"
-                aria-label="Hide sidebar"
-                title="Hide sidebar ["
-                onClick={() => {
-                  if (desktopRail()) persistRail(false);
-                  else setDrawer(false);
-                }}
-              >
-                <IconPanel close />
-              </button>
             </div>
             <p className="mt-3 text-[11px] uppercase tracking-[0.14em] text-bas-muted">Operator</p>
             <nav className="mt-5 flex-1 space-y-5 overflow-y-auto pr-1">
@@ -244,20 +229,6 @@ function ShellInner({ children }: { children: ReactNode }) {
               ))}
             </nav>
             <div className="admin-safe mt-4 flex flex-col gap-1 border-t border-bas-hairline pt-3 text-sm">
-              <button
-                type="button"
-                className="flex min-h-9 items-center gap-2 rounded-[8px] px-3 text-left text-[13px] text-bas-muted hover:bg-bas-card hover:text-bas-heading"
-                onClick={() => setCmd(true)}
-              >
-                <IconSearch className="h-4 w-4" />
-                Search
-                <span className="ml-auto hidden md:inline">
-                  <Kbd>/</Kbd>
-                </span>
-              </button>
-              <Link href="/market" className="flex min-h-9 items-center rounded-[8px] px-3 text-[13px] text-bas-muted hover:bg-bas-card hover:text-bas-heading">
-                View market
-              </Link>
               <button type="button" onClick={logout} className="min-h-9 rounded-[8px] px-3 text-left text-[13px] text-bas-down hover:bg-bas-down/10">
                 Sign out
               </button>
@@ -269,14 +240,12 @@ function ShellInner({ children }: { children: ReactNode }) {
               <div className="flex min-w-0 items-center gap-2">
                 <button
                   type="button"
-                  className={`bas-mac-icon bg-bas-card text-bas-heading ${
-                    drawer ? "hidden" : ""
-                  } ${rail ? "md:hidden" : ""}`}
+                  className="bas-mac-icon bg-bas-card text-bas-heading"
                   onClick={toggleRail}
-                  aria-label="Show sidebar"
-                  title="Show sidebar ["
+                  aria-label={(wide ? rail : drawer) ? "Hide sidebar" : "Show sidebar"}
+                  title="Toggle sidebar ["
                 >
-                  <IconPanel />
+                  <IconPanel close={wide ? rail : drawer} />
                 </button>
                 <div className="min-w-0">
                   <p className="truncate text-sm font-semibold text-bas-heading">{pageTitle(path)}</p>
