@@ -5,7 +5,7 @@ export default function JudgesPage() {
   return (
     <AppShell>
       <p className="text-xs text-bas-muted">Submission · 90 seconds</p>
-      <h1 className="mt-2 text-3xl font-semibold text-white">Judge path</h1>
+      <h1 className="mt-2 text-3xl font-semibold text-bas-heading">Judge path</h1>
       <p className="mt-3 max-w-2xl text-sm leading-6 text-bas-muted">
         Someone with zero Agent Studio knowledge should finish this without a
         dead end. Phone or desktop.
@@ -16,14 +16,14 @@ export default function JudgesPage() {
           {
             n: "1",
             t: "Land",
-            d: "Home explains the product. Four category tiles are equal. Stats are live from 8004scan.",
+            d: "Home states the product. Four equal categories: Monitoring, Grid, Yield, Health. Stats come from 8004scan.",
             href: "/",
             cta: "Home",
           },
           {
             n: "2",
             t: "Find by category",
-            d: "Open Market. Use the four filters. Uncategorized stays visible — we do not hide weak records.",
+            d: "Open Market. Use the four filters (Monitoring = Range Guard). Uncategorized stays visible.",
             href: "/market?cat=grid",
             cta: "Grid market",
           },
@@ -58,7 +58,7 @@ export default function JudgesPage() {
           {
             n: "7",
             t: "TermiX proof",
-            d: "Advantage report: three tasks, trading + security, time / cost / quality.",
+            d: "Advantage report: trade, security, yield, and equities. Time / cost / quality.",
             href: "/advantage",
             cta: "Report",
           },
@@ -69,7 +69,7 @@ export default function JudgesPage() {
           >
             <div>
               <div className="num text-bas-primary">{s.n}</div>
-              <div className="mt-1 font-semibold text-white">{s.t}</div>
+              <div className="mt-1 font-semibold text-bas-heading">{s.t}</div>
               <p className="mt-1 text-sm text-bas-muted">{s.d}</p>
             </div>
             <Button href={s.href} className="shrink-0">
@@ -80,11 +80,11 @@ export default function JudgesPage() {
       </ol>
 
       <section className="mt-8 rounded-[12px] bg-bas-card p-5 text-sm text-bas-muted">
-        <h2 className="font-semibold text-white">Tracks ticked</h2>
+        <h2 className="font-semibold text-bas-heading">Tracks ticked</h2>
         <ul className="mt-3 space-y-1">
-          <li>Main — discover, compare, hire, four categories equal.</li>
-          <li>TermiX — this report + hireable trading/security agents.</li>
-          <li>Altana — session cap, allowlist, expiry, visible revoke.</li>
+          <li>Main — discover, compare, hire. Monitoring, grid, yield, health.</li>
+          <li>TermiX — /advantage: trade, security, yield, equities.</li>
+          <li>Altana — cap, allowlist, expiry, revoke, public receipt + explorer.</li>
           <li>PancakeSwap — Smart Router / NFPM, recipient = you, minOut ≠ 0.</li>
         </ul>
       </section>

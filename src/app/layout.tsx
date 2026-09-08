@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Mono, Inter } from "next/font/google";
 import { Providers } from "@/app/providers";
+import { appearanceBootScript } from "@/components/theme/ThemeProvider";
 import "./globals.css";
 
 const inter = Inter({
@@ -24,9 +25,14 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${plex.variable} h-full antialiased`}
+      data-theme="dark"
+      className={`${inter.variable} ${plex.variable} min-h-dvh antialiased`}
+      suppressHydrationWarning
     >
-      <body className="min-h-full">
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: appearanceBootScript }} />
+      </head>
+      <body className="flex min-h-dvh flex-col">
         <Providers>{children}</Providers>
       </body>
     </html>

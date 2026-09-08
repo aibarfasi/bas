@@ -1,11 +1,9 @@
 import { MarketView } from "@/components/market/MarketView";
 import { AppShell } from "@/components/shell/AppShell";
-import type { CategoryFilter } from "@/lib/agents/types";
+import { normalizeCat } from "@/lib/categories";
 import { getMarketplaceCatalog } from "@/lib/agents/scan";
 
 export const revalidate = 60;
-
-const CATS = new Set(["all", "rebalance", "grid", "yield", "health"]);
 
 export default async function MarketPage({
   searchParams,
@@ -13,7 +11,7 @@ export default async function MarketPage({
   searchParams: Promise<{ cat?: string }>;
 }) {
   const { cat } = await searchParams;
-  const initial = CATS.has(cat ?? "") ? (cat as CategoryFilter) : "all";
+  const initial = normalizeCat(cat);
   const { agents, totalOnBsc } = await getMarketplaceCatalog();
   const featured = agents.filter((a) => a.featured).length;
   const live = agents.filter((a) => a.live === true).length;

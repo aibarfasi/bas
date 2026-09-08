@@ -6,10 +6,10 @@ import { useAccount, useSignTypedData } from "wagmi";
 import { AppShell } from "@/components/shell/AppShell";
 import { Button } from "@/components/ui/Button";
 import { WalletButton } from "@/components/wallet/WalletButton";
-import { findFeatured } from "@/lib/agents/featured";
 import type { MarketplaceAgent } from "@/lib/agents/types";
 import { buildSession, grantTypedData } from "@/lib/altana/sessions";
 import { useHireStore } from "@/lib/hire/store";
+import { hireKind } from "@/lib/hire/kind";
 import { parseHireId, shortAddr } from "@/lib/format";
 import { PANCAKE_ALLOWLIST } from "@/lib/pancake/allowlist";
 
@@ -33,16 +33,16 @@ export default function HirePage({ params }: { params: Promise<{ id: string }> }
 
   useEffect(() => {
     if (!parsed) return;
-    const featured = findFeatured(parsed.chainId, parsed.tokenId);
-    if (featured) {
-      setAgent(featured);
-      setCap(featured.policy?.spendCap ?? "0.05");
-      setHours(featured.policy?.expiryHours ?? 24);
-      return;
-    }
     fetch(`/api/agents/${parsed.chainId}/${parsed.tokenId}`)
       .then((r) => r.json())
-      .then((d) => setAgent(d.agent ?? null))
+      .then((d) => {
+        const next = d.agent ?? null;
+        setAgent(next);
+        if (next) {
+          setCap(next.policy?.spendCap ?? "0.05");
+          setHours(next.policy?.expiryHours ?? 24);
+        }
+      })
       .catch(() => setAgent(null));
   }, [parsed?.chainId, parsed?.tokenId]);
 
@@ -117,9 +117,28 @@ export default function HirePage({ params }: { params: Promise<{ id: string }> }
         });
         draft.grantSig = grantSig;
       }
-      upsertSession(draft);
 
-      const kind = agent.category === "uncategorized" ? "yield" : agent.category;
+      const ledger = await fetch("/api/altana/receipts", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          action: "grant",
+          sessionId: draft.id,
+          agentId: draft.agentId,
+          agentName: draft.agentName,
+          wallet: draft.wallet,
+          owner: draft.owner,
+          spendCap: draft.spendCap,
+          spendToken: draft.spendToken,
+          expiry: draft.expiry,
+          allowlist: draft.allowlist,
+          grantSig: draft.grantSig,
+          demo: draft.demo,
+        }),
+      }).then((r) => r.json());
+      draft.ledgerId = ledger.receipt?.id ?? null;
+
+      const kind = hireKind(agent);
       const paid = await fetch(`/api/hire/faces/${kind}/x402`, {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -128,6 +147,8 @@ export default function HirePage({ params }: { params: Promise<{ id: string }> }
           recipient: address ?? "hirer",
         }),
       }).then((r) => r.json());
+      draft.paymentId = paid.receipt?.id ?? null;
+      upsertSession(draft);
 
       const result = paid.result as {
         title: string;
@@ -135,14 +156,14 @@ export default function HirePage({ params }: { params: Promise<{ id: string }> }
         outputs: { label: string; value: string }[];
       };
 
-      addJob({
+      const job = {
         id: `job_${draft.id}`,
         sessionId: draft.id,
         agentId: agent.id,
         agentName: agent.name,
-        rail: "x402",
+        rail: "x402" as const,
         paidUsd: agent.priceUsd ?? 0,
-        status: "delivered",
+        status: "delivered" as const,
         startedAt: Date.now(),
         deliveredAt: Date.now(),
         deliverable: {
@@ -152,7 +173,13 @@ export default function HirePage({ params }: { params: Promise<{ id: string }> }
           recipient: address ?? "hirer (demo)",
           custody: "Agent never held user funds. Output recipient = you.",
         },
-      });
+      };
+      addJob(job);
+      fetch("/api/ops/hires", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ session: draft, job }),
+      }).catch(() => null);
       router.push(`/session/${draft.id}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Hire failed");
@@ -187,7 +214,7 @@ export default function HirePage({ params }: { params: Promise<{ id: string }> }
         ))}
       </ol>
 
-      <div className="mt-6 max-w-xl rounded-[12px] border border-bas-hairline-light bg-white p-5">
+      <div className="mt-6 max-w-xl rounded-[12px] bg-bas-card p-5">
         {step === 0 ? (
           <div>
             <h2 className="font-semibold">Connect or continue as judge</h2>

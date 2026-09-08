@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { BasLogo } from "@/components/brand/BasLogo";
+import { AppearanceToggles } from "@/components/theme/AppearanceToggles";
 import { WalletButton } from "@/components/wallet/WalletButton";
 import { useCompareStore } from "@/lib/compare/store";
 
@@ -28,15 +30,9 @@ export function Header({ light = false }: { light?: boolean }) {
     >
       <div className="mx-auto flex h-full max-w-[1440px] items-center justify-between px-4 md:px-6">
         <div className="flex items-center gap-8">
-          <Link href="/" className="flex items-center gap-2">
-            <span className="text-xl font-bold tracking-tight text-bas-primary">
-              BAS
-            </span>
-            <span
-              className={`hidden text-xs sm:inline ${light ? "text-bas-muted" : "text-bas-muted"}`}
-            >
-              BNB Agent Studio Marketplace
-            </span>
+          <Link href="/" className="flex items-center" aria-label="BAS marketplace">
+            <BasLogo className="hidden h-8 w-auto sm:block" />
+            <BasLogo compact className="h-8 w-8 sm:hidden" />
           </Link>
           <nav className="hidden items-center gap-5 md:flex">
             {NAV.map((item) => {
@@ -50,7 +46,7 @@ export function Header({ light = false }: { light?: boolean }) {
                       ? "text-bas-primary"
                       : light
                         ? "text-bas-ink hover:text-bas-ink"
-                        : "text-bas-body hover:text-white"
+                        : "text-bas-body hover:text-bas-heading"
                   }`}
                 >
                   {item.label}
@@ -63,6 +59,7 @@ export function Header({ light = false }: { light?: boolean }) {
           </nav>
         </div>
         <div className="flex items-center gap-2">
+          <AppearanceToggles />
           <WalletButton light={light} />
           <button
             type="button"

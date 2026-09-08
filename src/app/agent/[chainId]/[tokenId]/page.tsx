@@ -56,7 +56,7 @@ export default async function AgentPage({
             <CategoryBadge cat={agent.category} />
             <LiveBadge live={agent.live} />
           </div>
-          <h1 className="mt-3 text-3xl font-semibold text-white">{agent.name}</h1>
+          <h1 className="mt-3 text-3xl font-semibold text-bas-heading">{agent.name}</h1>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-bas-muted">
             {agent.description || agent.categoryReason}
           </p>
@@ -108,7 +108,7 @@ export default async function AgentPage({
 
       <div className="mt-6 grid gap-4 lg:grid-cols-3">
         <section className="rounded-[12px] bg-bas-card p-5 lg:col-span-2">
-          <h2 className="text-sm font-semibold text-white">What it does</h2>
+          <h2 className="text-sm font-semibold text-bas-heading">What it does</h2>
           <p className="mt-2 text-sm leading-6 text-bas-muted">
             {cat ? cat.job : agent.categoryReason}
           </p>
@@ -137,7 +137,7 @@ export default async function AgentPage({
         </section>
 
         <section className="rounded-[12px] bg-bas-card p-5">
-          <h2 className="text-sm font-semibold text-white">Onchain identity</h2>
+          <h2 className="text-sm font-semibold text-bas-heading">Onchain identity</h2>
           <dl className="mt-3 space-y-2 text-sm">
             <Row k="Chain" v={chainName(agent.chainId)} />
             <Row k="Token" v={agent.tokenId} mono />
@@ -163,7 +163,7 @@ export default async function AgentPage({
 
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
         <section className="rounded-[12px] bg-bas-card p-5">
-          <h2 className="text-sm font-semibold text-white">Altana policy preview</h2>
+          <h2 className="text-sm font-semibold text-bas-heading">Altana policy preview</h2>
           {agent.policy ? (
             <dl className="mt-3 space-y-2 text-sm">
               <Row
@@ -194,7 +194,7 @@ export default async function AgentPage({
         </section>
 
         <section className="rounded-[12px] bg-bas-card p-5">
-          <h2 className="text-sm font-semibold text-white">
+          <h2 className="text-sm font-semibold text-bas-heading">
             Feedback ({agent.feedbackCount})
           </h2>
           {agent.feedback.length ? (

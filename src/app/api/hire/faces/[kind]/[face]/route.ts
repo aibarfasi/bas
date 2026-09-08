@@ -1,4 +1,5 @@
 import { pancakeYieldBoard, quotePancakeSwap } from "@/lib/pancake/quote";
+import { putPayment } from "@/lib/x402/receipts";
 import { NextResponse } from "next/server";
 
 const NAMES: Record<string, string> = {
@@ -6,6 +7,15 @@ const NAMES: Record<string, string> = {
   grid: "BAS Grid Pilot",
   yield: "BAS Yield Router",
   health: "BAS Health Sentinel",
+  equities: "BAS Equity Scout",
+};
+
+const PRICE: Record<string, number> = {
+  rebalance: 0.25,
+  grid: 0.15,
+  yield: 0.2,
+  health: 0.1,
+  equities: 0.12,
 };
 
 export async function GET(
@@ -36,7 +46,12 @@ export async function GET(
             network: "bsc-testnet",
             maxAmountRequired: "150000",
             asset: "USDT",
-            extra: { rail: "B402", facilitator: "Binance x402" },
+            extra: {
+              rail: "B402",
+              facilitator: "Binance x402",
+              payTo: "BAS seller face",
+              resource: `${origin}/api/hire/faces/${kind}/x402`,
+            },
           },
         ],
       },
@@ -63,6 +78,12 @@ export async function POST(
     recipient?: string;
     amountIn?: string;
   };
+  if (!body.payment) {
+    return NextResponse.json(
+      { error: "Payment Required", hint: "POST payment: demo | EIP-712 grant sig" },
+      { status: 402 },
+    );
+  }
   const quote = await quotePancakeSwap({ amountIn: body.amountIn });
   const yields = pancakeYieldBoard();
   const recipient = body.recipient ?? "hirer";
@@ -107,12 +128,38 @@ export async function POST(
         { label: "Recommended action", value: "Repay 12% or add BNB collateral" },
       ],
     },
+    equities: {
+      title: "Equity swing brief",
+      summary:
+        "7-day book: BNB slightly rich vs BTCB. Stay flat-to-short BNB, hold ETH as hedge. Invalidation: BNB closes 4% above the 7d VWAP.",
+      outputs: [
+        { label: "Bias", value: "BNB fade vs BTCB" },
+        { label: "Hedge", value: "Keep ETH sleeve" },
+        { label: "Invalidation", value: "BNB +4% vs 7d VWAP" },
+        { label: "Custody", value: "Research only. You place the trade." },
+      ],
+    },
   };
 
+  const receipt = putPayment({
+    id: `x402_${kind}_${Date.now().toString(36)}`,
+    kind,
+    network: "bsc-testnet",
+    facilitator: "Binance x402 / B402",
+    scheme: "exact",
+    asset: "USDT",
+    amountUsd: PRICE[kind] ?? 0.15,
+    payment: body.payment,
+    recipient,
+    paidAt: Date.now(),
+    demo: body.payment === "demo",
+  });
+
   return NextResponse.json({
-    paid: Boolean(body.payment) || true,
+    paid: true,
     rail: "x402",
     kind,
+    receipt,
     result: work[kind] ?? work.yield,
   });
 }

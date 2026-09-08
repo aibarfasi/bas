@@ -29,7 +29,7 @@ export default function ComparePage() {
     <AppShell>
       <div className="flex items-end justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-white">Compare</h1>
+          <h1 className="text-2xl font-semibold text-bas-heading">Compare</h1>
           <p className="mt-1 text-sm text-bas-muted">
             Two or three agents. Same fields. Hire the one you can defend.
           </p>
@@ -57,7 +57,7 @@ export default function ComparePage() {
                 <th className="py-3 text-left text-xs font-medium text-bas-muted">Field</th>
                 {agents.map((a) => (
                   <th key={a.id} className="py-3 text-left">
-                    <Link href={agentPath(a.chainId, a.tokenId)} className="text-white">
+                    <Link href={agentPath(a.chainId, a.tokenId)} className="text-bas-heading">
                       {a.name}
                     </Link>
                     <div className="mt-1">

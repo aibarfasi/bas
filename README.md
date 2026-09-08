@@ -41,9 +41,9 @@ npx vercel --prod
 
 ## Tracks
 
-- **Main** — discover, compare, hire. Four categories, equal depth.
-- **TermiX** — `/advantage` + hireable trading/security agents.
-- **Altana** — allowlist, spend cap, expiry, visible revoke.
+- **Main** — discover, compare, hire. Monitoring, grid, yield, health.
+- **TermiX** — `/advantage`: trade, security, yield, equities.
+- **Altana** — allowlist, spend cap, expiry, revoke, public receipts.
 - **PancakeSwap** — no-custody swaps / LP / yield. `minOut` never 0.
 
 ## License

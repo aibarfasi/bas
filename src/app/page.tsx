@@ -15,7 +15,7 @@ export default async function HomePage() {
     <AppShell>
       <section className="pb-10 pt-6 md:pb-16 md:pt-12">
         <p className="text-sm text-bas-muted">BNB Smart Chain · ERC-8004 · x402</p>
-        <h1 className="mt-4 max-w-3xl text-4xl font-semibold leading-tight tracking-tight text-white md:text-6xl">
+        <h1 className="mt-4 max-w-3xl text-4xl font-semibold leading-tight tracking-tight text-bas-heading md:text-6xl">
           Hire the right agent.
           <span className="text-bas-primary"> Not the loudest one.</span>
         </h1>
@@ -51,7 +51,7 @@ export default async function HomePage() {
 
       <section className="border-t border-bas-hairline py-10">
         <div className="mb-4 flex items-end justify-between">
-          <h2 className="text-xl font-semibold text-white">Four categories. Equal depth.</h2>
+          <h2 className="text-xl font-semibold text-bas-heading">Four categories. Equal depth.</h2>
           <Link href="/market" className="text-sm text-bas-primary">
             See all
           </Link>
@@ -67,11 +67,11 @@ export default async function HomePage() {
             return (
               <Link
                 key={id}
-                href={`/market?cat=${id}`}
+                href={`/market?cat=${id === "rebalance" ? "monitoring" : id}`}
                 className="flex flex-col rounded-[12px] bg-bas-card p-5 hover:bg-bas-elevated"
               >
                 <div className="text-xs text-bas-muted">First-class</div>
-                <div className="mt-2 text-lg font-semibold text-white">{meta.label}</div>
+                <div className="mt-2 text-lg font-semibold text-bas-heading">{meta.label}</div>
                 <p className="mt-2 flex-1 text-sm leading-6 text-bas-muted">{meta.job}</p>
                 <p className="mt-3 text-xs text-bas-body">{meta.pancake}</p>
                 {agent ? (
@@ -84,13 +84,13 @@ export default async function HomePage() {
       </section>
 
       <section className="border-t border-bas-hairline py-10">
-        <h2 className="text-xl font-semibold text-white">Hire in three steps</h2>
+        <h2 className="text-xl font-semibold text-bas-heading">Hire in three steps</h2>
         <div className="mt-4 grid gap-3 md:grid-cols-3">
           {[
             {
               n: "01",
               t: "Pick by category",
-              d: "Rebalance, grid, yield, health. Same template. No hero category.",
+              d: "Monitoring, grid, yield, health. Same template. No hero category.",
             },
             {
               n: "02",
@@ -105,7 +105,7 @@ export default async function HomePage() {
           ].map((s) => (
             <div key={s.n} className="rounded-[12px] bg-bas-card p-5">
               <div className="num text-bas-primary">{s.n}</div>
-              <div className="mt-2 font-semibold text-white">{s.t}</div>
+              <div className="mt-2 font-semibold text-bas-heading">{s.t}</div>
               <p className="mt-2 text-sm text-bas-muted">{s.d}</p>
             </div>
           ))}

@@ -1,0 +1,339 @@
+import "server-only";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
+import { join } from "path";
+import { PANCAKE, PANCAKE_ALLOWLIST } from "@/lib/pancake/allowlist";
+import type {
+  AdminState,
+  AgentDraft,
+  AgentPatch,
+  AllowlistItem,
+  AuditEvent,
+  SiteSettings,
+} from "@/lib/admin/types";
+import type { MarketplaceAgent } from "@/lib/agents/types";
+import type { HiredSession } from "@/lib/altana/sessions";
+import type { HireJob } from "@/lib/hire/types";
+
+const FILE = join(process.cwd(), "data", "admin.json");
+
+export const DEFAULT_SETTINGS: SiteSettings = {
+  prizeWallet: "0xFFF78E63181220Ca6F5FaA76bec1D2FaC01035A8",
+  intakeUrl: "https://forms.gle/9g9XPNFwnYaHAz9L8",
+  liveUrl: "https://bas-sigma-eight.vercel.app",
+  repoUrl: "https://github.com/aibarfasi/bas",
+  notice: "",
+  maintenance: false,
+  hideUncategorized: false,
+  intakeSubmitted: false,
+  deployments: {},
+};
+
+function emptyState(): AdminState {
+  return {
+    overrides: {},
+    custom: [],
+    settings: { ...DEFAULT_SETTINGS, deployments: {} },
+    allowlist: [],
+    audit: [],
+    sessions: [],
+    jobs: [],
+  };
+}
+
+const g = globalThis as typeof globalThis & { __basAdmin?: AdminState };
+
+function loadFromDisk(): AdminState | null {
+  try {
+    if (!existsSync(FILE)) return null;
+    const raw = JSON.parse(readFileSync(FILE, "utf8")) as Partial<AdminState>;
+    const base = emptyState();
+    return {
+      ...base,
+      ...raw,
+      overrides: raw.overrides ?? {},
+      custom: raw.custom ?? [],
+      settings: { ...DEFAULT_SETTINGS, ...raw.settings, deployments: raw.settings?.deployments ?? {} },
+      allowlist: raw.allowlist ?? [],
+      audit: raw.audit ?? [],
+      sessions: raw.sessions ?? [],
+      jobs: raw.jobs ?? [],
+    };
+  } catch {
+    return null;
+  }
+}
+
+function persist(state: AdminState) {
+  try {
+    mkdirSync(join(process.cwd(), "data"), { recursive: true });
+    writeFileSync(FILE, JSON.stringify(state, null, 2));
+  } catch {
+    // Vercel / read-only FS — keep memory only.
+  }
+}
+
+function state(): AdminState {
+  if (!g.__basAdmin) g.__basAdmin = loadFromDisk() ?? emptyState();
+  return g.__basAdmin;
+}
+
+function commit(next: Partial<AdminState>, action: string, detail: string) {
+  const cur = state();
+  const event: AuditEvent = {
+    id: `aud_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+    at: Date.now(),
+    action,
+    detail,
+  };
+  Object.assign(cur, next, {
+    audit: [event, ...cur.audit].slice(0, 80),
+  });
+  persist(cur);
+  return cur;
+}
+
+export function getAdminState() {
+  return state();
+}
+
+export function loadPersistedHires() {
+  const cur = state();
+  return { sessions: cur.sessions, jobs: cur.jobs };
+}
+
+export function persistHires(sessions: HiredSession[], jobs: HireJob[]) {
+  const cur = state();
+  cur.sessions = sessions;
+  cur.jobs = jobs;
+  persist(cur);
+}
+
+export function getSettings() {
+  const cur = state().settings;
+  return {
+    ...DEFAULT_SETTINGS,
+    ...cur,
+    deployments: cur.deployments ?? {},
+  };
+}
+
+export function updateSettings(patch: Partial<SiteSettings>) {
+  const settings = { ...state().settings, ...patch };
+  if (patch.deployments) settings.deployments = { ...state().settings.deployments, ...patch.deployments };
+  commit({ settings }, "settings.update", Object.keys(patch).join(", "));
+  return settings;
+}
+
+export function getOverrides() {
+  return state().overrides;
+}
+
+export function getCustomAgents() {
+  return state().custom;
+}
+
+export function putOverride(patch: AgentPatch) {
+  const overrides = { ...state().overrides, [patch.id]: { ...state().overrides[patch.id], ...patch } };
+  commit({ overrides }, "agent.patch", patch.id);
+  return overrides[patch.id];
+}
+
+export function putOverrides(patches: AgentPatch[]) {
+  const overrides = { ...state().overrides };
+  for (const patch of patches) {
+    overrides[patch.id] = { ...overrides[patch.id], ...patch };
+  }
+  commit({ overrides }, "agent.bulk", `${patches.length} agents`);
+  return overrides;
+}
+
+export function exportSnapshot() {
+  const cur = state();
+  return {
+    exportedAt: new Date().toISOString(),
+    overrides: cur.overrides,
+    custom: cur.custom,
+    settings: cur.settings,
+    allowlist: cur.allowlist,
+    sessions: cur.sessions,
+    jobs: cur.jobs,
+  };
+}
+
+export function importSnapshot(raw: {
+  overrides?: AdminState["overrides"];
+  custom?: AdminState["custom"];
+  settings?: Partial<SiteSettings>;
+  allowlist?: AdminState["allowlist"];
+  sessions?: AdminState["sessions"];
+  jobs?: AdminState["jobs"];
+}) {
+  commit(
+    {
+      overrides: raw.overrides ?? state().overrides,
+      custom: raw.custom ?? state().custom,
+      settings: raw.settings
+        ? { ...DEFAULT_SETTINGS, ...state().settings, ...raw.settings, deployments: raw.settings.deployments ?? state().settings.deployments }
+        : state().settings,
+      allowlist: raw.allowlist ?? state().allowlist,
+      sessions: raw.sessions ?? state().sessions,
+      jobs: raw.jobs ?? state().jobs,
+    },
+    "snapshot.import",
+    "operator snapshot",
+  );
+  return exportSnapshot();
+}
+
+export function clearOverride(id: string) {
+  const overrides = { ...state().overrides };
+  delete overrides[id];
+  commit({ overrides }, "agent.reset", id);
+}
+
+export function addCustomAgent(draft: AgentDraft): MarketplaceAgent {
+  const id = `${draft.chainId}-${draft.tokenId}`;
+  if (state().custom.some((a) => a.id === id)) {
+    throw new Error(`Agent ${id} already exists`);
+  }
+  const agent: MarketplaceAgent = {
+    id,
+    tokenId: draft.tokenId,
+    chainId: draft.chainId,
+    registry: draft.registry || PANCAKE.smartRouter,
+    name: draft.name,
+    description: draft.description,
+    owner: draft.owner,
+    agentWallet: draft.agentWallet || draft.owner,
+    category: draft.category === "uncategorized" ? "uncategorized" : draft.category,
+    categoryReason: draft.categoryReason || "Added from the BAS operator console.",
+    featured: draft.featured,
+    hireable: draft.hireable,
+    live: draft.live,
+    liveReason: draft.live ? "Marked live by operator." : "Marked down by operator.",
+    x402: draft.hireable,
+    protocols: draft.hireable ? ["A2A", "X402"] : [],
+    services: draft.hireable
+      ? [
+          { name: "a2a", endpoint: `/api/hire/faces/${draft.category === "uncategorized" ? "yield" : draft.category}/a2a`, version: "0.3.0" },
+          { name: "x402", endpoint: `/api/hire/faces/${draft.category === "uncategorized" ? "yield" : draft.category}/x402`, version: "1" },
+        ]
+      : [],
+    totalScore: 0,
+    averageScore: 0,
+    feedbackCount: 0,
+    healthScore: null,
+    verified: draft.verified,
+    createdAt: new Date().toISOString(),
+    txHash: draft.txHash || null,
+    imageUrl: null,
+    metrics: {
+      winRate: null,
+      window: null,
+      maxDrawdown: null,
+      fills: null,
+      pnlPct: null,
+      risk: null,
+      venue: null,
+    },
+    policy: {
+      wallet: draft.agentWallet || draft.owner,
+      allowlist: getEffectiveAllowlist(),
+      spendCap: draft.spendCap,
+      spendToken: draft.spendToken,
+      expiryHours: draft.expiryHours,
+    },
+    priceUsd: draft.priceUsd,
+    feedback: [],
+    source: "featured",
+  };
+  commit({ custom: [agent, ...state().custom] }, "agent.create", id);
+  return agent;
+}
+
+export function removeCustomAgent(id: string) {
+  const found = state().custom.some((a) => a.id === id);
+  if (!found) throw new Error("Custom agent not found");
+  commit(
+    { custom: state().custom.filter((a) => a.id !== id) },
+    "agent.delete",
+    id,
+  );
+}
+
+export function getEffectiveAllowlist(): AllowlistItem[] {
+  const extra = state().allowlist;
+  const seen = new Set(PANCAKE_ALLOWLIST.map((a) => a.address.toLowerCase()));
+  return [
+    ...PANCAKE_ALLOWLIST,
+    ...extra.filter((a) => {
+      const key = a.address.toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    }),
+  ];
+}
+
+export function setAllowlist(items: AllowlistItem[]) {
+  commit({ allowlist: items }, "allowlist.replace", `${items.length} contracts`);
+  return getEffectiveAllowlist();
+}
+
+export function addAllowlistItem(item: AllowlistItem) {
+  const extra = [...state().allowlist.filter((a) => a.address.toLowerCase() !== item.address.toLowerCase()), item];
+  commit({ allowlist: extra }, "allowlist.add", item.address);
+  return getEffectiveAllowlist();
+}
+
+export function removeAllowlistItem(address: string) {
+  commit(
+    { allowlist: state().allowlist.filter((a) => a.address.toLowerCase() !== address.toLowerCase()) },
+    "allowlist.remove",
+    address,
+  );
+  return getEffectiveAllowlist();
+}
+
+export function listAudit() {
+  return state().audit;
+}
+
+export function applyPatchToAgent(agent: MarketplaceAgent, patch?: AgentPatch): MarketplaceAgent {
+  if (!patch) return agent;
+  const next: MarketplaceAgent = { ...agent };
+  if (patch.name != null) next.name = patch.name;
+  if (patch.description != null) next.description = patch.description;
+  if (patch.category != null) next.category = patch.category;
+  if (patch.categoryReason != null) next.categoryReason = patch.categoryReason;
+  if (patch.featured != null) next.featured = patch.featured;
+  if (patch.hireable != null) next.hireable = patch.hireable;
+  if (patch.live !== undefined) next.live = patch.live;
+  if (patch.verified != null) next.verified = patch.verified;
+  if (patch.priceUsd !== undefined) next.priceUsd = patch.priceUsd;
+  if (patch.owner != null) next.owner = patch.owner;
+  if (patch.agentWallet !== undefined) next.agentWallet = patch.agentWallet;
+  if (patch.tokenId != null) next.tokenId = patch.tokenId;
+  if (patch.chainId != null) next.chainId = patch.chainId;
+  if (patch.txHash !== undefined) next.txHash = patch.txHash;
+  if (patch.registry != null) next.registry = patch.registry;
+  if (patch.tokenId != null || patch.chainId != null) {
+    next.id = `${next.chainId}-${next.tokenId}`;
+  }
+  if (
+    patch.spendCap != null ||
+    patch.spendToken != null ||
+    patch.expiryHours != null ||
+    patch.allowlist != null ||
+    patch.agentWallet !== undefined
+  ) {
+    next.policy = {
+      wallet: patch.agentWallet ?? next.policy?.wallet ?? next.agentWallet ?? next.owner,
+      allowlist: patch.allowlist ?? next.policy?.allowlist ?? getEffectiveAllowlist(),
+      spendCap: patch.spendCap ?? next.policy?.spendCap ?? "0.05",
+      spendToken: patch.spendToken ?? next.policy?.spendToken ?? "BNB",
+      expiryHours: patch.expiryHours ?? next.policy?.expiryHours ?? 24,
+    };
+  }
+  return next;
+}

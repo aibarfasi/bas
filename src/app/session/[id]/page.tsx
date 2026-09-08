@@ -59,6 +59,30 @@ export default function SessionPage({
         });
       }
       revokeSession(session.id, sig);
+      fetch("/api/ops/hires", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ revoke: { id: session.id, sig } }),
+      }).catch(() => null);
+      await fetch("/api/altana/receipts", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          action: "revoke",
+          sessionId: session.id,
+          agentId: session.agentId,
+          agentName: session.agentName,
+          wallet: session.wallet,
+          owner: session.owner,
+          spendCap: session.spendCap,
+          spendToken: session.spendToken,
+          expiry: session.expiry,
+          allowlist: session.allowlist,
+          grantSig: session.grantSig,
+          revokeSig: sig,
+          demo: session.demo,
+        }),
+      }).catch(() => null);
     } finally {
       setBusy(false);
     }
@@ -84,19 +108,19 @@ export default function SessionPage({
       <p className="num mt-2 text-sm text-bas-muted">{session.id}</p>
 
       <div className="mt-6 grid gap-4 md:grid-cols-3">
-        <div className="rounded-[12px] border border-bas-hairline-light bg-white p-5">
+        <div className="rounded-[12px] bg-bas-card p-5">
           <div className="text-xs text-bas-muted">Spend cap</div>
           <div className="num mt-2 text-2xl font-bold">
             {session.spendCap} {session.spendToken}
           </div>
         </div>
-        <div className="rounded-[12px] border border-bas-hairline-light bg-white p-5">
+        <div className="rounded-[12px] bg-bas-card p-5">
           <div className="text-xs text-bas-muted">Expires in</div>
           <div className="num mt-2 text-2xl font-bold">
             {state === "active" ? `${hh}:${mm}:${ss}` : "—"}
           </div>
         </div>
-        <div className="rounded-[12px] border border-bas-hairline-light bg-white p-5">
+        <div className="rounded-[12px] bg-bas-card p-5">
           <div className="text-xs text-bas-muted">Mode</div>
           <div className="mt-2 text-2xl font-bold">
             {session.demo ? "Demo" : "Signed"}
@@ -104,7 +128,7 @@ export default function SessionPage({
         </div>
       </div>
 
-      <section className="mt-6 rounded-[12px] border border-bas-hairline-light bg-white p-5">
+      <section className="mt-6 rounded-[12px] bg-bas-card p-5">
         <h2 className="font-semibold">Allowlist</h2>
         <ul className="mt-3 space-y-2 text-sm">
           {session.allowlist.length ? (
@@ -151,6 +175,27 @@ export default function SessionPage({
             <dt className="text-bas-muted">Revoke sig</dt>
             <dd className="num">{session.revokeSig ? shortAddr(session.revokeSig, 6) : "—"}</dd>
           </div>
+          <div className="flex justify-between">
+            <dt className="text-bas-muted">Public receipt</dt>
+            <dd>
+              {session.ledgerId ? (
+                <a
+                  href={`/api/altana/receipts?id=${session.ledgerId}`}
+                  className="num text-bas-primary"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  {session.ledgerId}
+                </a>
+              ) : (
+                "—"
+              )}
+            </dd>
+          </div>
+          <div className="flex justify-between">
+            <dt className="text-bas-muted">x402 receipt</dt>
+            <dd className="num">{session.paymentId ?? "—"}</dd>
+          </div>
         </dl>
         {state === "active" ? (
           <Button className="mt-5" variant="danger" disabled={busy} onClick={revoke}>
@@ -162,14 +207,15 @@ export default function SessionPage({
           </p>
         )}
         <p className="mt-3 text-xs text-bas-muted">
-          Altana judges read live KeyStore txs. This page is the product surface:
-          cap, expiry, allowlist, revoke. When bag + Altana SDK are wired on a
-          funded wallet, grantTx / revokeTx appear as explorer links.
+          Cap, expiry, allowlist, and revoke are on this page. Grant and revoke
+          write a public receipt at /api/altana/receipts. The wallet link opens
+          the Altana explorer. bag deploy adds KeyStore txs when the Studio CLI
+          is funded.
         </p>
       </section>
 
       {job ? (
-        <section className="mt-4 rounded-[12px] border border-bas-hairline-light bg-white p-5">
+        <section className="mt-4 rounded-[12px] bg-bas-card p-5">
           <h2 className="font-semibold">Deliverable</h2>
           <p className="mt-1 text-xs text-bas-muted">
             {job.rail} · ${job.paidUsd.toFixed(2)} · {job.status}

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BasLogo } from "@/components/brand/BasLogo";
 
 export function Footer({ light = false }: { light?: boolean }) {
   return (
@@ -11,7 +12,7 @@ export function Footer({ light = false }: { light?: boolean }) {
     >
       <div className="mx-auto flex max-w-[1440px] flex-col gap-4 px-4 py-10 md:flex-row md:items-center md:justify-between md:px-6">
         <div>
-          <div className="text-sm font-semibold text-bas-primary">BAS</div>
+          <BasLogo className="h-8 w-auto" />
           <p className="mt-1 max-w-md text-xs leading-5">
             Discover, compare, and hire ERC-8004 agents on BNB Smart Chain.
             Payments via x402 / ERC-8183. Sessions via Altana. Swaps via
@@ -20,6 +21,7 @@ export function Footer({ light = false }: { light?: boolean }) {
         </div>
         <div className="flex flex-wrap gap-4 text-xs">
           <Link href="/docs/judges">Judge path</Link>
+          <Link href="/admin">Operator</Link>
           <Link href="/advantage">Agent Advantage Report</Link>
           <a href="https://www.bnbchain.org/en/hackathons/smart-money-era">
             Build the Era

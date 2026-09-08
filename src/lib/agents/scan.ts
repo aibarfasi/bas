@@ -1,5 +1,5 @@
 import { classifyAgent } from "@/lib/agents/classify";
-import { findFeatured, FEATURED_AGENTS } from "@/lib/agents/featured";
+import { applyAdminCatalog, findResolved, resolveFeaturedAgents } from "@/lib/admin/catalog";
 import type { MarketplaceAgent, AgentService } from "@/lib/agents/types";
 
 const SCAN = "https://8004scan.io/api/v1/public";
@@ -142,7 +142,7 @@ export async function getScanAgent(
   chainId: number,
   tokenId: string,
 ): Promise<MarketplaceAgent | null> {
-  const featured = findFeatured(chainId, tokenId);
+  const featured = findResolved(chainId, tokenId);
   if (featured) return featured;
   const body = await scanGet<{ success?: boolean; data?: ScanAgent }>(
     `/agents/${chainId}/${encodeURIComponent(tokenId)}`,
@@ -156,9 +156,10 @@ export async function getMarketplaceCatalog(): Promise<{
   totalOnBsc: number;
 }> {
   const { agents, totalOnBsc } = await listScanAgents(60);
-  const seen = new Set(FEATURED_AGENTS.map((a) => a.id));
-  const rest = agents.filter((a) => !seen.has(a.id));
-  return { agents: [...FEATURED_AGENTS, ...rest], totalOnBsc };
+  const featured = resolveFeaturedAgents();
+  const seen = new Set(featured.map((a) => a.id));
+  const rest = applyAdminCatalog(agents.filter((a) => !seen.has(a.id)));
+  return { agents: applyAdminCatalog([...featured, ...rest]), totalOnBsc };
 }
 
 export async function getScanStats() {

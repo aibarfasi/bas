@@ -16,7 +16,7 @@ export function WalletButton({ light = false }: { light?: boolean }) {
         onClick={() => disconnect()}
         className={`num inline-flex h-10 items-center rounded-[6px] border px-3 text-xs ${
           light
-            ? "border-bas-hairline-light bg-white text-bas-ink"
+            ? "border-bas-hairline-light bg-bas-card text-bas-ink"
             : "border-bas-hairline bg-bas-card text-bas-body"
         }`}
       >

@@ -20,6 +20,8 @@ export type HiredSession = {
   revokeSig: string | null;
   grantTx: string | null;
   revokeTx: string | null;
+  ledgerId?: string | null;
+  paymentId?: string | null;
   demo: boolean;
 };
 
@@ -58,6 +60,8 @@ export function buildSession(input: {
     revokeSig: null,
     grantTx: null,
     revokeTx: null,
+    ledgerId: null,
+    paymentId: null,
     demo: input.demo,
   };
 }

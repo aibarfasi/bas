@@ -3,25 +3,9 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { HiredSession } from "@/lib/altana/sessions";
+import type { HireJob } from "@/lib/hire/types";
 
-export type HireJob = {
-  id: string;
-  sessionId: string;
-  agentId: string;
-  agentName: string;
-  rail: "x402" | "erc-8183";
-  paidUsd: number;
-  status: "funded" | "running" | "delivered";
-  startedAt: number;
-  deliveredAt: number | null;
-  deliverable: {
-    title: string;
-    summary: string;
-    outputs: { label: string; value: string }[];
-    recipient: string;
-    custody: string;
-  };
-};
+export type { HireJob };
 
 type HireState = {
   sessions: HiredSession[];

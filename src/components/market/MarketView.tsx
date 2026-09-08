@@ -5,7 +5,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CategoryBadge, FeaturedBadge, LiveBadge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { FILTERS } from "@/lib/categories";
+import { FILTERS, catQuery } from "@/lib/categories";
 import { useCompareStore } from "@/lib/compare/store";
 import type { AgentsResponse, CategoryFilter, MarketplaceAgent } from "@/lib/agents/types";
 import { agentPath, formatPct, formatUsd, hirePath, shortAddr } from "@/lib/format";
@@ -37,7 +37,7 @@ export function MarketView({
       if (!showUncat && a.category === "uncategorized") return false;
       if (liveOnly && a.live !== true) return false;
       if (q) {
-        const hay = `${a.name} ${a.description} ${a.tokenId}`.toLowerCase();
+        const hay = `${a.name} ${a.description} ${a.tokenId} ${a.owner}`.toLowerCase();
         if (!hay.includes(q.toLowerCase())) return false;
       }
       return true;
@@ -48,7 +48,8 @@ export function MarketView({
 
   function setCategory(next: CategoryFilter) {
     setCat(next);
-    const url = next === "all" ? "/market" : `/market?cat=${next}`;
+    const q = catQuery(next);
+    const url = q ? `/market?cat=${q}` : "/market";
     router.replace(url, { scroll: false });
   }
 
@@ -56,7 +57,7 @@ export function MarketView({
     <div>
       <div className="flex flex-col gap-3 border-b border-bas-hairline pb-4 md:flex-row md:items-end md:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-white">Market</h1>
+          <h1 className="text-2xl font-semibold text-bas-heading">Market</h1>
           <p className="mt-1 text-sm text-bas-muted">
             <span className="num text-bas-primary">{data.stats.totalOnBsc.toLocaleString()}</span>{" "}
             agents indexed on 8004scan. Showing {data.stats.scanned} with{" "}
@@ -69,46 +70,70 @@ export function MarketView({
         </div>
       </div>
 
-      <div className="sticky top-16 z-20 -mx-4 mt-4 border-b border-bas-hairline bg-bas-canvas px-4 py-3 md:-mx-6 md:px-6">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-          <div className="flex flex-wrap gap-2">
-            {FILTERS.map((f) => (
+      <div className="sticky top-16 z-20 -mx-4 mt-4 border-y border-bas-hairline bg-bas-canvas/80 px-4 py-3 backdrop-blur-md md:-mx-6 md:px-6">
+        <div className="flex min-w-0 items-center gap-2 overflow-x-auto">
+          {FILTERS.map((f) => (
+            <button
+              key={f.id}
+              type="button"
+              onClick={() => setCategory(f.id)}
+              className={`h-10 shrink-0 rounded-[6px] px-3 text-sm ${
+                cat === f.id
+                  ? "bg-bas-primary text-bas-on-primary"
+                  : "bg-bas-card text-bas-body hover:bg-bas-elevated"
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
+          <label className="relative min-w-[160px] flex-1">
+            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-bas-muted">
+              <SearchIcon />
+            </span>
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Search name, token, or owner"
+              className="h-10 w-full rounded-[8px] border border-bas-hairline bg-bas-card pl-10 pr-10 text-sm text-bas-heading outline-none placeholder:text-bas-muted focus:border-bas-primary"
+            />
+            {q ? (
               <button
-                key={f.id}
                 type="button"
-                onClick={() => setCategory(f.id)}
-                className={`h-10 rounded-[6px] px-3 text-sm ${
-                  cat === f.id
-                    ? "bg-bas-primary text-bas-on-primary"
-                    : "bg-bas-card text-bas-body"
-                }`}
+                onClick={() => setQ("")}
+                className="absolute right-2 top-1/2 h-7 w-7 -translate-y-1/2 rounded-[6px] text-xs text-bas-muted hover:bg-bas-elevated hover:text-bas-heading"
+                aria-label="Clear search"
               >
-                {f.label}
+                ✕
               </button>
-            ))}
-          </div>
-          <input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Search name or token"
-            className="h-10 flex-1 rounded-[8px] border border-bas-hairline bg-bas-card px-3 text-sm text-bas-body outline-none placeholder:text-bas-muted"
-          />
-          <label className="flex h-10 items-center gap-2 text-sm text-bas-muted">
-            <input
-              type="checkbox"
-              checked={liveOnly}
-              onChange={(e) => setLiveOnly(e.target.checked)}
-            />
-            Live only
+            ) : null}
           </label>
-          <label className="flex h-10 items-center gap-2 text-sm text-bas-muted">
-            <input
-              type="checkbox"
-              checked={showUncat}
-              onChange={(e) => setShowUncat(e.target.checked)}
-            />
-            Show uncategorized
-          </label>
+          <button
+            type="button"
+            onClick={() => setLiveOnly((v) => !v)}
+            aria-pressed={liveOnly}
+            className={`h-10 shrink-0 rounded-[6px] border px-3 text-sm ${
+              liveOnly
+                ? "border-bas-up/40 bg-bas-up/15 text-bas-up"
+                : "border-bas-hairline bg-bas-card text-bas-muted hover:text-bas-heading"
+            }`}
+          >
+            Live
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowUncat((v) => !v)}
+            aria-pressed={showUncat}
+            className={`h-10 shrink-0 rounded-[6px] border px-3 text-sm ${
+              showUncat
+                ? "border-bas-primary/40 bg-bas-primary/15 text-bas-heading"
+                : "border-bas-hairline bg-bas-card text-bas-muted hover:text-bas-heading"
+            }`}
+          >
+            Uncat
+          </button>
+          <span className="num shrink-0 text-xs text-bas-muted">
+            {filtered.length}/{data.stats.scanned}
+          </span>
         </div>
       </div>
 
@@ -136,7 +161,7 @@ export function MarketView({
                   <Link href={agentPath(a.chainId, a.tokenId)} className="block">
                     <div className="flex items-center gap-2">
                       {a.featured ? <FeaturedBadge /> : null}
-                      <span className="font-medium text-white">{a.name}</span>
+                      <span className="font-medium text-bas-heading">{a.name}</span>
                     </div>
                     <div className="mt-0.5 text-xs text-bas-muted">
                       {a.chainId}:{shortAddr(a.tokenId, 6)} · {shortAddr(a.owner)}
@@ -223,6 +248,15 @@ export function MarketView({
   );
 }
 
+function SearchIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <circle cx="7" cy="7" r="4.25" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M10.4 10.4 14 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 function AgentMobileCard({ agent: a }: { agent: MarketplaceAgent }) {
   const compare = useCompareStore();
   return (
@@ -231,7 +265,7 @@ function AgentMobileCard({ agent: a }: { agent: MarketplaceAgent }) {
         <Link href={agentPath(a.chainId, a.tokenId)}>
           <div className="flex items-center gap-2">
             {a.featured ? <FeaturedBadge /> : null}
-            <span className="font-medium text-white">{a.name}</span>
+            <span className="font-medium text-bas-heading">{a.name}</span>
           </div>
         </Link>
         <LiveBadge live={a.live} />

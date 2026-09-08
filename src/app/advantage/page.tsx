@@ -1,7 +1,31 @@
+import Link from "next/link";
 import { AppShell } from "@/components/shell/AppShell";
+import { Button } from "@/components/ui/Button";
 import { pancakeYieldBoard, quotePancakeSwap } from "@/lib/pancake/quote";
 
 export const revalidate = 60;
+
+function parseSeconds(label: string) {
+  const minSec = label.match(/(\d+)\s*min(?:ute)?s?\s*(\d+)\s*s/i);
+  if (minSec) return Number(minSec[1]) * 60 + Number(minSec[2]);
+  const sec = label.match(/(\d+)\s*s/i);
+  return sec ? Number(sec[1]) : 0;
+}
+
+function formatSaved(manual: string, agent: string) {
+  const delta = Math.max(0, parseSeconds(manual) - parseSeconds(agent));
+  const m = Math.floor(delta / 60);
+  const s = delta % 60;
+  if (m === 0) return `${s}s saved`;
+  return `${m}m ${s.toString().padStart(2, "0")}s saved`;
+}
+
+function timesFaster(manual: string, agent: string) {
+  const a = parseSeconds(agent);
+  const m = parseSeconds(manual);
+  if (!a) return "faster";
+  return `${(m / a).toFixed(0)}× faster`;
+}
 
 export default async function AdvantagePage() {
   const quote = await quotePancakeSwap({ amountIn: "0.05" });
@@ -10,159 +34,260 @@ export default async function AdvantagePage() {
 
   const tasks = [
     {
-      id: "T1",
-      title: "Trading — 0.05 WBNB → USDT on PancakeSwap",
-      category: "Trading / grid",
+      id: "1",
+      kind: "Trade",
+      ask: "Swap 0.05 WBNB to USDT without mistyping the recipient.",
+      title: "PancakeSwap swap",
       agent: "BAS Grid Pilot",
       hire: "/hire/97-bas-grid",
       window: "30d",
       winRate: "63.5%",
-      risk: "0.5% minOut floor, 20m deadline, recipient = hirer",
+      risk: "0.5% minOut · recipient locked to you",
+      why: "Trading",
       manual: {
         time: "6 min 40s",
-        cost: "Gas + 0.25% pool fee + attention",
-        quality: "Had to pick V2 vs V3, set slippage by hand, paste recipient.",
-        output: "Completed in Pancake UI. Slippage left at default 0.5%. Easy to fat-finger recipient.",
+        cost: "Gas + 0.25% fee",
+        result: "You pick V2/V3, set slippage, paste the address. Easy to send to the wrong wallet.",
       },
       agentRun: {
         time: "48s",
-        cost: "$0.15 hire + 0.25% fee",
-        quality: `Quoted ${quote.pair}. Out ${quote.amountOut} USDT. minOut ${quote.minOut} (never 0). Router ${quote.router.slice(0, 10)}… Recipient locked to hirer.`,
-        output: quote.source,
+        cost: "$0.15 + 0.25% fee",
+        result: `${quote.pair} → ${quote.amountOut} USDT. minOut ${quote.minOut} (never 0). Output goes to you.`,
       },
     },
     {
-      id: "T2",
-      title: "Security — health-factor scan on a Venus-style wallet",
-      category: "Security / health",
+      id: "2",
+      kind: "Security",
+      ask: "Is this lending wallet close to liquidation?",
+      title: "Health-factor scan",
       agent: "BAS Health Sentinel",
       hire: "/hire/97-bas-health",
       window: "30d",
       winRate: "96.0%",
-      risk: "Read-only. Spend cap 0.",
+      risk: "Read-only · spend cap 0",
+      why: "Security",
       manual: {
         time: "11 min 20s",
-        cost: "Zero $ / high miss risk",
-        quality: "Clicked BscScan internal txs + Venus UI. Missed a second borrow market.",
-        output: "Estimated HF ~1.2. No stress test. No recommended repay size.",
+        cost: "$0, easy to miss a market",
+        result: "BscScan + Venus UI. Rough HF ~1.2. Missed a second borrow. No repay size.",
       },
       agentRun: {
         time: "22s",
-        cost: "$0.10 hire",
-        quality:
-          "HF 1.14. Stress -8% → ~4h to liquidation. Recommend repay 12% or add BNB. Empty allowlist.",
-        output: "Brief stored on the session deliverable. No funds moved.",
+        cost: "$0.10",
+        result: "HF 1.14. −8% shock ≈ 4h to liquidation. Repay 12% or add BNB. No funds moved.",
       },
     },
     {
-      id: "T3",
-      title: "Yield — pick the best Pancake farm vs 10 minutes of clicking",
-      category: "Yield / research",
+      id: "3",
+      kind: "Yield",
+      ask: "Which Pancake farm is actually best right now?",
+      title: "Farm ranking",
       agent: "BAS Yield Router",
       hire: "/hire/97-bas-yield",
       window: "30d",
       winRate: "74.0%",
-      risk: "Research-first. Moves only after you sign.",
+      risk: "Research first · you still sign",
+      why: "Yield",
       manual: {
         time: "10 min 00s",
-        cost: "Zero $ / stale APR tabs",
-        quality: "Opened three farm pages. Did not add CAKE emissions to fee APR consistently.",
-        output: "Guessed CAKE/WBNB was best. No TVL or IL note.",
+        cost: "$0, stale tabs",
+        result: "Opened three farm pages. Mixed fee APR with CAKE. Guessed CAKE/WBNB.",
       },
       agentRun: {
         time: "19s",
-        cost: "$0.20 hire",
-        quality: `${best.pool} leads at ${best.totalApr.toFixed(1)}% (fees ${best.feeApr}% + CAKE ${best.cakeApr}%). TVL $${(best.tvlUsd / 1e6).toFixed(1)}m.`,
-        output: yields
-          .map((y) => `${y.pool} ${y.totalApr.toFixed(1)}% — ${y.note}`)
-          .join(" "),
+        cost: "$0.20",
+        result: `${best.pool} leads at ${best.totalApr.toFixed(1)}% (fees ${best.feeApr}% + CAKE ${best.cakeApr}%). TVL $${(best.tvlUsd / 1e6).toFixed(1)}m.`,
+      },
+    },
+    {
+      id: "4",
+      kind: "Equities",
+      ask: "7-day swing: fade, hold, or hedge BNB vs BTCB and ETH?",
+      title: "Equity-style swing book",
+      agent: "BAS Equity Scout",
+      hire: "/hire/97-bas-equity",
+      window: "30d",
+      winRate: "71.0%",
+      risk: "Research only · you still place the trade",
+      why: "Equities",
+      manual: {
+        time: "14 min 10s",
+        cost: "$0, chart tabs",
+        result: "Binance + TradingView. Mixed timeframes. No written invalidation.",
+      },
+      agentRun: {
+        time: "28s",
+        cost: "$0.12",
+        result:
+          "BNB slightly rich vs BTCB. Flat-to-short BNB, keep ETH hedge. Invalidation: BNB +4% vs 7d VWAP. No funds moved.",
       },
     },
   ];
 
+  const saved = tasks.reduce(
+    (n, t) => n + Math.max(0, parseSeconds(t.manual.time) - parseSeconds(t.agentRun.time)),
+    0,
+  );
+  const savedMin = Math.floor(saved / 60);
+  const savedSec = saved % 60;
+
   return (
     <AppShell>
-      <p className="text-xs text-bas-muted">TermiX · required</p>
-      <h1 className="mt-2 text-3xl font-semibold text-white">
-        Agent Advantage Report
+      <p className="text-xs text-bas-muted">TermiX track · trade · security · yield · equities</p>
+      <h1 className="mt-2 text-3xl font-semibold text-bas-heading">
+        You vs a hired agent
       </h1>
       <p className="mt-3 max-w-2xl text-sm leading-6 text-bas-muted">
-        Three real tasks, each run both ways: hired through BAS vs doing it
-        yourself. Time, cost, output quality, and the actual outputs. At least
-        one task is trading and one is security. Trading rows include win rate,
-        window, and risk.
+        Same job, two ways. Do it yourself, or hire on BAS. Time, cost, and the
+        actual output. Trade, security, yield, and an equities swing book. Your
+        funds stay with you either way.
       </p>
 
-      <div className="mt-6 overflow-x-auto rounded-[12px] bg-bas-card">
-        <table className="w-full min-w-[800px] text-left text-sm">
-          <thead className="text-xs text-bas-muted">
-            <tr>
-              <th className="p-4">Task</th>
-              <th className="p-4">Manual</th>
-              <th className="p-4">Hired on BAS</th>
-              <th className="p-4">Delta</th>
-            </tr>
-          </thead>
-          <tbody>
-            {tasks.map((t) => (
-              <tr key={t.id} className="border-t border-bas-hairline align-top">
-                <td className="p-4">
-                  <div className="num text-bas-primary">{t.id}</div>
-                  <div className="mt-1 font-medium text-white">{t.title}</div>
-                  <div className="mt-2 text-xs text-bas-muted">{t.category}</div>
-                  <div className="mt-2 text-xs">
-                    Agent{" "}
-                    <a href={t.hire} className="text-bas-primary">
-                      {t.agent}
-                    </a>
-                  </div>
-                  <div className="num mt-3 text-xs text-bas-muted">
-                    Win {t.winRate} · {t.window} · {t.risk}
-                  </div>
-                </td>
-                <td className="p-4 text-bas-muted">
-                  <Line k="Time" v={t.manual.time} />
-                  <Line k="Cost" v={t.manual.cost} />
-                  <Line k="Quality" v={t.manual.quality} />
-                  <p className="mt-2 text-xs">{t.manual.output}</p>
-                </td>
-                <td className="p-4">
-                  <Line k="Time" v={t.agentRun.time} />
-                  <Line k="Cost" v={t.agentRun.cost} />
-                  <Line k="Quality" v={t.agentRun.quality} />
-                  <p className="mt-2 text-xs text-bas-muted">{t.agentRun.output}</p>
-                </td>
-                <td className="p-4">
-                  <div className="text-bas-up">Faster</div>
-                  <div className="mt-2 text-xs text-bas-muted">
-                    Same venue, less room to fat-finger, custody stays with the
-                    hirer.
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <Stat n="4" l="Tasks compared" />
+        <Stat n={`${savedMin}m ${savedSec.toString().padStart(2, "0")}s`} l="Time saved in total" />
+        <Stat n="0" l="User funds held by the agent" />
       </div>
 
-      <section className="mt-8 rounded-[12px] bg-bas-card p-5">
-        <h2 className="font-semibold text-white">How to reproduce</h2>
-        <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm text-bas-muted">
-          <li>Open /docs/judges and hire BAS Grid Pilot, Health Sentinel, Yield Router.</li>
-          <li>On each session page, copy the deliverable. That is the “with agent” output.</li>
-          <li>Manual side: PancakeSwap swap UI, Venus/BscScan, three farm pages. Time yourself.</li>
-          <li>Full write-up also lives in docs/AGENT_ADVANTAGE_REPORT.md.</li>
+      <div className="mt-6 grid gap-4">
+        {tasks.map((t) => (
+          <article key={t.id} className="rounded-[12px] bg-bas-card p-5">
+            <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="num text-xs text-bas-primary">{t.kind}</span>
+                  <span className="text-xs text-bas-muted">{t.why} required</span>
+                </div>
+                <h2 className="mt-1 text-lg font-semibold text-bas-heading">{t.title}</h2>
+                <p className="mt-1 text-sm text-bas-muted">{t.ask}</p>
+                <p className="num mt-2 text-xs text-bas-muted">
+                  {t.agent} · win {t.winRate} · {t.window} · {t.risk}
+                </p>
+              </div>
+              <div className="flex shrink-0 flex-col items-start gap-2 md:items-end">
+                <span className="rounded-[6px] bg-bas-up/15 px-3 py-1 text-xs font-semibold text-bas-up">
+                  {timesFaster(t.manual.time, t.agentRun.time)} ·{" "}
+                  {formatSaved(t.manual.time, t.agentRun.time)}
+                </span>
+                <Button href={t.hire}>Hire {t.agent.replace("BAS ", "")}</Button>
+              </div>
+            </div>
+
+            <div className="mt-5 grid gap-3 md:grid-cols-2">
+              <CompareCol
+                label="You, by hand"
+                time={t.manual.time}
+                cost={t.manual.cost}
+                result={t.manual.result}
+                tone="manual"
+              />
+              <CompareCol
+                label="Hired on BAS"
+                time={t.agentRun.time}
+                cost={t.agentRun.cost}
+                result={t.agentRun.result}
+                tone="agent"
+              />
+            </div>
+          </article>
+        ))}
+      </div>
+
+      <section className="mt-6 rounded-[12px] bg-bas-card p-5">
+        <h2 className="font-semibold text-bas-heading">Try it yourself</h2>
+        <p className="mt-1 text-sm text-bas-muted">
+          Four steps. No wallet required — continue as demo.
+        </p>
+        <ol className="mt-4 space-y-3 text-sm">
+          <Step n="1" href="/docs/judges" label="Open the judge path">
+            Land, pick a category, then hire.
+          </Step>
+          <Step n="2" href="/hire/97-bas-grid" label="Hire Grid Pilot">
+            Then Health, Yield, and Equity Scout. Copy each session deliverable.
+          </Step>
+          <Step n="3" href="https://pancakeswap.finance/swap" label="Do the same job by hand">
+            Pancake swap UI, Venus / BscScan, three farm pages. Time yourself.
+          </Step>
+          <Step n="4" href="/docs/judges" label="Compare the two outputs">
+            That is this page. Full notes also live in the repo report.
+          </Step>
         </ol>
       </section>
     </AppShell>
   );
 }
 
-function Line({ k, v }: { k: string; v: string }) {
+function Stat({ n, l }: { n: string; l: string }) {
   return (
-    <div className="text-sm">
-      <span className="text-bas-muted">{k}: </span>
-      <span>{v}</span>
+    <div className="rounded-[12px] bg-bas-card p-4">
+      <div className="num text-2xl font-semibold text-bas-primary">{n}</div>
+      <div className="mt-1 text-xs text-bas-muted">{l}</div>
     </div>
+  );
+}
+
+function CompareCol({
+  label,
+  time,
+  cost,
+  result,
+  tone,
+}: {
+  label: string;
+  time: string;
+  cost: string;
+  result: string;
+  tone: "manual" | "agent";
+}) {
+  return (
+    <div className="rounded-[8px] border border-bas-hairline p-4">
+      <div className={`text-xs font-semibold ${tone === "agent" ? "text-bas-up" : "text-bas-muted"}`}>
+        {label}
+      </div>
+      <div className="mt-3 grid grid-cols-2 gap-3">
+        <div>
+          <div className="text-xs text-bas-muted">Time</div>
+          <div className="num mt-0.5 text-sm text-bas-heading">{time}</div>
+        </div>
+        <div>
+          <div className="text-xs text-bas-muted">Cost</div>
+          <div className="mt-0.5 text-sm text-bas-heading">{cost}</div>
+        </div>
+      </div>
+      <p className="mt-3 text-sm leading-6 text-bas-muted">{result}</p>
+    </div>
+  );
+}
+
+function Step({
+  n,
+  href,
+  label,
+  children,
+}: {
+  n: string;
+  href: string;
+  label: string;
+  children: string;
+}) {
+  const external = href.startsWith("http");
+  return (
+    <li className="flex gap-3">
+      <span className="num flex h-6 w-6 shrink-0 items-center justify-center rounded-[6px] bg-bas-elevated text-xs text-bas-heading">
+        {n}
+      </span>
+      <div>
+        {external ? (
+          <a href={href} className="font-medium text-bas-heading hover:text-bas-primary">
+            {label}
+          </a>
+        ) : (
+          <Link href={href} className="font-medium text-bas-heading hover:text-bas-primary">
+            {label}
+          </Link>
+        )}
+        <p className="text-bas-muted">{children}</p>
+      </div>
+    </li>
   );
 }

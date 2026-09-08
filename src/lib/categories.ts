@@ -5,10 +5,10 @@ export const CATEGORY_META: Record<
   { label: string; short: string; job: string; pancake: string }
 > = {
   rebalance: {
-    label: "Rebalancing",
-    short: "Rebalance",
-    job: "Manages LP ranges and resets positions automatically as price drifts.",
-    pancake: "PancakeSwap V3 NFPM range recenter. Fees keep accruing instead of going idle.",
+    label: "Monitoring",
+    short: "Monitor",
+    job: "Watches markets, wallets, and LP positions, then acts before the range or book goes idle.",
+    pancake: "PancakeSwap V3 NFPM range watch + recenter. Fees keep accruing instead of going idle.",
   },
   grid: {
     label: "Grid trading",
@@ -32,7 +32,7 @@ export const CATEGORY_META: Record<
 
 export const FILTERS: { id: CategoryFilter; label: string }[] = [
   { id: "all", label: "All" },
-  { id: "rebalance", label: "Rebalancing" },
+  { id: "rebalance", label: "Monitoring" },
   { id: "grid", label: "Grid trading" },
   { id: "yield", label: "Yield" },
   { id: "health", label: "Health factor" },
@@ -41,4 +41,18 @@ export const FILTERS: { id: CategoryFilter; label: string }[] = [
 export function categoryLabel(cat: Category) {
   if (cat === "uncategorized") return "Uncategorized";
   return CATEGORY_META[cat].label;
+}
+
+export function normalizeCat(cat?: string | null): CategoryFilter {
+  if (cat === "monitoring" || cat === "rebalance") return "rebalance";
+  if (cat === "grid" || cat === "yield" || cat === "health" || cat === "all") {
+    return cat;
+  }
+  return "all";
+}
+
+export function catQuery(id: CategoryFilter) {
+  if (id === "all") return "";
+  if (id === "rebalance") return "monitoring";
+  return id;
 }

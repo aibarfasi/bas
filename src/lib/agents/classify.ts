@@ -4,6 +4,10 @@ const RULES: { cat: Exclude<Category, "uncategorized">; needles: string[] }[] = 
   {
     cat: "rebalance",
     needles: [
+      "monitor",
+      "monitoring",
+      "watch",
+      "watcher",
       "rebalance",
       "rebalancing",
       "lp range",
@@ -13,6 +17,8 @@ const RULES: { cat: Exclude<Category, "uncategorized">; needles: string[] }[] = 
       "liquidity range",
       "recenter",
       "concentrated",
+      "wallet watch",
+      "position watch",
     ],
   },
   {
@@ -87,6 +93,6 @@ export function classifyAgent(input: {
 
   return {
     category: "uncategorized",
-    reason: "Metadata does not map to rebalance, grid, yield, or health.",
+    reason: "Metadata does not map to monitoring, grid, yield, or health.",
   };
 }

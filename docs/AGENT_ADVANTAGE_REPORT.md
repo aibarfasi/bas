@@ -48,8 +48,24 @@ Reproduction lives on `/advantage` and `/docs/judges`.
 
 **Agent output:** Highest combined APR pool first (typically WBNB/USDT 0.25%). Full board on `/advantage`.
 
+## Task 4 — Equities (TermiX weighted)
+
+- Agent: BAS Equity Scout (`/hire/97-bas-equity`)
+- Window: 30d · Win rate: 71.0% · Risk: research-only, spend cap 0
+
+| | Manual charts | Hired Equity Scout |
+| --- | --- | --- |
+| Time | 14 min 10s | 28s |
+| Cost | $0 / mixed TFs | $0.12 |
+| Quality | No written invalidation | BNB fade vs BTCB, ETH hedge, +4% VWAP kill |
+
+**Manual output:** Clicked Binance + TradingView. No brief.
+
+**Agent output:** Session deliverable. You still place the trade.
+
 ## Attachments
 
-- Session deliverables after hiring the three BAS sellers
+- Session deliverables after hiring Grid, Health, Yield, Equity Scout
 - Pancake quote from `GET /api/pancake/quote`
+- Public Altana receipts at `/api/altana/receipts`
 - This file + `/advantage`
