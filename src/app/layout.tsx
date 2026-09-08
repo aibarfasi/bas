@@ -9,12 +9,16 @@ import "./globals.css";
 const inter = Inter({
   variable: "--font-bas-sans",
   subsets: ["latin"],
+  display: "swap",
+  adjustFontFallback: true,
 });
 
 const plex = IBM_Plex_Mono({
   variable: "--font-bas-mono",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
+  display: "swap",
+  adjustFontFallback: true,
 });
 
 export const metadata: Metadata = {
@@ -46,6 +50,7 @@ export const viewport: Viewport = {
   themeColor: "#000000",
   width: "device-width",
   initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
@@ -54,7 +59,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="en"
       data-theme="dark"
-      className={`${inter.variable} ${plex.variable} min-h-dvh antialiased`}
+      className={`${inter.variable} ${inter.className} ${plex.variable} min-h-dvh antialiased`}
       suppressHydrationWarning
     >
       <head>

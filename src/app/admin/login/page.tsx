@@ -73,7 +73,7 @@ export default function AdminLoginPage() {
             />
             <button
               type="button"
-              className="h-12 shrink-0 rounded-[8px] border border-bas-hairline bg-bas-elevated px-3 text-xs text-bas-heading sm:h-10"
+              className="bas-mac-chip shrink-0 border border-bas-hairline bg-bas-card text-bas-heading sm:h-8"
               onClick={() => setShow((v) => !v)}
             >
               {show ? "Hide" : "Show"}

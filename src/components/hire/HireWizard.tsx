@@ -328,7 +328,7 @@ export function HireWizard({ agent }: { agent: MarketplaceAgent }) {
                     value={brief.lockCap ? "0" : cap}
                     disabled={brief.lockCap}
                     onChange={(e) => setCap(e.target.value)}
-                    className="num mt-1 h-10 w-full rounded-[8px] border border-bas-hairline bg-bas-canvas px-3 text-bas-heading disabled:bg-bas-surface-soft"
+                    className="admin-field num mt-1 h-9 w-full px-3 text-bas-heading disabled:opacity-60"
                   />
                 </label>
                 <label className="mt-3 block text-xs text-bas-muted">
@@ -339,7 +339,7 @@ export function HireWizard({ agent }: { agent: MarketplaceAgent }) {
                     max={168}
                     value={hours}
                     onChange={(e) => setHours(Number(e.target.value))}
-                    className="num mt-1 h-10 w-full rounded-[8px] border border-bas-hairline bg-bas-canvas px-3 text-bas-heading"
+                    className="admin-field num mt-1 h-9 w-full px-3 text-bas-heading"
                   />
                 </label>
                 <ul className="mt-4 space-y-1 text-sm">

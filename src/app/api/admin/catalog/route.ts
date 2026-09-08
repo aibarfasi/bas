@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin/auth";
 import { getMarketplaceCatalog } from "@/lib/agents/scan";
-import { getOverrides, putOverride, putOverrides } from "@/lib/admin/store";
+import { getOverrides, getSettings, putOverride, putOverrides } from "@/lib/admin/store";
 import type { AgentPatch } from "@/lib/admin/types";
 
 export async function GET() {
@@ -12,6 +12,7 @@ export async function GET() {
     agents,
     totalOnBsc,
     overrides: getOverrides(),
+    trendingIds: getSettings().trendingIds,
   });
 }
 

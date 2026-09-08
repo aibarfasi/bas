@@ -72,7 +72,7 @@ export function AdminSelect<T extends string>({
         aria-label={ariaLabel}
         onClick={() => setOpen((v) => !v)}
         className={`admin-field flex w-full items-center justify-between gap-2 text-left disabled:opacity-50 ${
-          compact ? "h-8 px-2 text-xs" : "h-10 px-3 text-sm"
+          compact ? "h-8 px-2.5 text-[13px]" : "h-9 px-3 text-[13px]"
         }`}
       >
         <span className="min-w-0 truncate">{selected?.label ?? value}</span>
@@ -83,7 +83,7 @@ export function AdminSelect<T extends string>({
           ref={menu}
           id={listId}
           role="listbox"
-          className="admin-select-menu absolute z-30 mt-1 max-h-60 w-full min-w-[11rem] overflow-auto rounded-[8px] border border-bas-hairline p-1"
+          className="admin-select-menu absolute z-30 mt-1.5 max-h-60 w-full min-w-[11rem] overflow-auto rounded-[8px] p-1.5"
         >
           {options.map((o) => {
             const on = o.id === value;
@@ -93,7 +93,7 @@ export function AdminSelect<T extends string>({
                 type="button"
                 role="option"
                 aria-selected={on}
-                className={`flex min-h-9 w-full items-center rounded-[6px] px-2.5 text-left text-sm ${
+                className={`flex min-h-8 w-full items-center rounded-[6px] px-2.5 text-left text-[13px] tracking-[-0.01em] ${
                   on
                     ? "bg-bas-primary text-bas-on-primary"
                     : "text-bas-heading hover:bg-bas-elevated"

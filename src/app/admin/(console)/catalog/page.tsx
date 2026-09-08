@@ -15,6 +15,7 @@ import { adminFetch } from "@/lib/admin/client";
 import { downloadCsv } from "@/lib/admin/csv";
 import { CATEGORIES, type MarketplaceAgent } from "@/lib/agents/types";
 import { categoryLabel } from "@/lib/categories";
+import { nextTrendingIds } from "@/lib/agents/trending";
 import { agentPath, formatUsd, shortAddr } from "@/lib/format";
 
 type Filter = "all" | "featured" | "hireable" | "live" | "uncategorized" | "custom";
@@ -40,10 +41,12 @@ export default function AdminCatalogPage() {
   const [confirmHide, setConfirmHide] = useState<null | "bulk" | string>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
+  const [trendingIds, setTrendingIds] = useState<string[]>([]);
 
   async function load() {
-    const data = await adminFetch<{ agents: MarketplaceAgent[] }>("/api/admin/catalog");
+    const data = await adminFetch<{ agents: MarketplaceAgent[]; trendingIds?: string[] }>("/api/admin/catalog");
     setAgents(data.agents);
+    setTrendingIds(data.trendingIds ?? []);
     setLoading(false);
   }
 
@@ -77,6 +80,24 @@ export default function AdminCatalogPage() {
       return `${a.name} ${a.tokenId} ${a.id} ${a.owner} ${a.category} ${a.source}`.toLowerCase().includes(n);
     });
   }, [agents, q, filter]);
+
+  async function toggleTrending(id: string) {
+    const on = !trendingIds.includes(id);
+    const next = nextTrendingIds(trendingIds, id, on);
+    setBusy(id);
+    try {
+      await adminFetch("/api/admin/settings", {
+        method: "PATCH",
+        body: JSON.stringify({ trendingIds: next }),
+      });
+      setTrendingIds(next);
+      toast("ok", on ? "On home trending" : "Removed from trending");
+    } catch (e) {
+      toast("err", e instanceof Error ? e.message : "Update failed");
+    } finally {
+      setBusy(null);
+    }
+  }
 
   async function patch(id: string, body: Record<string, unknown>, ok = "Catalog updated") {
     setBusy(id);
@@ -287,6 +308,14 @@ export default function AdminCatalogPage() {
                 onClick={() => void patch(a.id, { featured: !a.featured }, a.featured ? "Unfeatured" : "Featured")}
               />
               <FlagBtn
+                on={trendingIds.includes(a.id)}
+                label="Trending"
+                onLabel="Trending"
+                offLabel="Trend"
+                busy={busy === a.id}
+                onClick={() => void toggleTrending(a.id)}
+              />
+              <FlagBtn
                 on={a.hireable}
                 label="Hireable"
                 onLabel="Hireable"
@@ -343,6 +372,14 @@ export default function AdminCatalogPage() {
                     offLabel="Feature"
                     busy={busy === a.id}
                     onClick={() => void patch(a.id, { featured: !a.featured }, a.featured ? "Unfeatured" : "Featured")}
+                  />
+                  <FlagBtn
+                    on={trendingIds.includes(a.id)}
+                    label="Trending"
+                    onLabel="Trending"
+                    offLabel="Trend"
+                    busy={busy === a.id}
+                    onClick={() => void toggleTrending(a.id)}
                   />
                   <FlagBtn
                     on={a.hireable}

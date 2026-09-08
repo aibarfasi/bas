@@ -66,6 +66,7 @@ export type SiteSettings = {
   hideUncategorized: boolean;
   intakeSubmitted: boolean;
   deployments: Record<string, DeployMap>;
+  trendingIds: string[];
 };
 
 export type AllowlistItem = { label: string; address: string };

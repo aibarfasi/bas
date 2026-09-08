@@ -1,5 +1,6 @@
 import { classifyAgent } from "@/lib/agents/classify";
 import { applyAdminCatalog, findResolved, resolveFeaturedAgents, resolvePublicAgent } from "@/lib/admin/catalog";
+import { getSettings, hydrateFromSql } from "@/lib/admin/store";
 import type { AgentFeedback, AgentService, MarketplaceAgent } from "@/lib/agents/types";
 
 const SCAN = "https://8004scan.io/api/v1/public";
@@ -286,11 +287,16 @@ export async function getMarketplaceCatalog(): Promise<{
   agents: MarketplaceAgent[];
   totalOnBsc: number;
 }> {
+  await hydrateFromSql();
   const { agents, totalOnBsc } = await listScanAgents(40);
   const featured = resolveFeaturedAgents();
   const seen = new Set(featured.map((a) => a.id));
   const rest = applyAdminCatalog(agents.filter((a) => !seen.has(a.id)));
   return { agents: sortCatalog(applyAdminCatalog([...featured, ...rest])), totalOnBsc };
+}
+
+export function catalogTrendingIds() {
+  return getSettings().trendingIds;
 }
 
 export async function getScanStats() {

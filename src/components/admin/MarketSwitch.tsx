@@ -57,7 +57,7 @@ export function MarketSwitch({
           aria-expanded={open}
           aria-haspopup="dialog"
           onClick={() => setOpen((v) => !v)}
-          className={`inline-flex h-10 items-center gap-2 rounded-full border px-2.5 text-xs sm:px-3 ${
+          className={`bas-mac-chip gap-2 border ${
             paused
               ? "border-bas-down/40 bg-bas-down/10 text-bas-down"
               : "border-bas-up/40 bg-bas-up/10 text-bas-up"
@@ -81,7 +81,7 @@ export function MarketSwitch({
           <div
             role="dialog"
             aria-label={paused ? "Open the market" : "Pause the market"}
-            className="admin-panel absolute right-0 top-[calc(100%+8px)] z-50 w-[min(18.5rem,calc(100vw-2rem))] rounded-[12px] border border-bas-hairline bg-bas-surface-soft p-3 shadow-2xl"
+            className="admin-panel absolute right-0 top-[calc(100%+8px)] z-50 w-[min(18.5rem,calc(100vw-2rem))] rounded-[12px] border border-bas-hairline bg-bas-surface-soft p-3.5"
           >
             <span className="absolute -top-1.5 right-6 h-3 w-3 rotate-45 border-t border-l border-bas-hairline bg-bas-surface-soft" />
             <p className="relative text-sm font-semibold text-bas-heading">

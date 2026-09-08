@@ -3,34 +3,33 @@
 import type { ReactNode } from "react";
 import { useAppearance, type ThemeMode } from "@/lib/theme/store";
 
-function IconSun({ className = "h-4 w-4" }: { className?: string }) {
+function IconMoon() {
   return (
-    <svg viewBox="0 0 24 24" className={className} fill="none" aria-hidden>
-      <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="1.75" />
+    <svg viewBox="0 0 20 20" className="h-[15px] w-[15px]" aria-hidden>
       <path
-        d="M12 3.5v1.8M12 18.7V20.5M4.7 4.7l1.3 1.3M18 18l1.3 1.3M3.5 12h1.8M18.7 12H20.5M4.7 19.3 6 18M18 6l1.3-1.3"
-        stroke="currentColor"
-        strokeWidth="1.75"
-        strokeLinecap="round"
+        fill="currentColor"
+        d="M16.76 13.07A7.2 7.2 0 0 1 7.2 3.16a.4.4 0 0 0-.52-.5 8 8 0 1 0 10.65 10.66.4.4 0 0 0-.57-.25Z"
       />
     </svg>
   );
 }
 
-function IconMoon({ className = "h-4 w-4" }: { className?: string }) {
+function IconSun() {
   return (
-    <svg viewBox="0 0 24 24" className={className} fill="none" aria-hidden>
+    <svg viewBox="0 0 20 20" className="h-[15px] w-[15px]" aria-hidden>
       <path
-        d="M16.5 13.2A6.6 6.6 0 0 1 10.8 6.4 6.7 6.7 0 1 0 16.5 13.2Z"
-        stroke="currentColor"
-        strokeWidth="1.75"
-        strokeLinejoin="round"
+        fill="currentColor"
+        d="M10 6.35a3.65 3.65 0 1 0 0 7.3 3.65 3.65 0 0 0 0-7.3Z"
+      />
+      <path
+        fill="currentColor"
+        d="M10 2.4a.7.7 0 0 1 .7.7v1.2a.7.7 0 1 1-1.4 0V3.1a.7.7 0 0 1 .7-.7Zm0 12.6a.7.7 0 0 1 .7.7v1.2a.7.7 0 1 1-1.4 0v-1.2a.7.7 0 0 1 .7-.7ZM17.6 10a.7.7 0 0 1-.7.7h-1.2a.7.7 0 1 1 0-1.4h1.2a.7.7 0 0 1 .7.7ZM4.3 10a.7.7 0 0 1-.7.7H2.4a.7.7 0 1 1 0-1.4h1.2a.7.7 0 0 1 .7.7Zm10.98-5.28a.7.7 0 0 1 0 .99l-.85.85a.7.7 0 1 1-.99-.99l.85-.85a.7.7 0 0 1 .99 0ZM5.56 13.44a.7.7 0 0 1 0 .99l-.85.85a.7.7 0 1 1-.99-.99l.85-.85a.7.7 0 0 1 .99 0Zm8.88.99a.7.7 0 0 1-.99 0l-.85-.85a.7.7 0 1 1 .99-.99l.85.85a.7.7 0 0 1 0 .99ZM6.41 6.56a.7.7 0 0 1-.99 0l-.85-.85a.7.7 0 0 1 .99-.99l.85.85a.7.7 0 0 1 0 .99Z"
       />
     </svg>
   );
 }
 
-function ModeBtn({
+function Seg({
   mode,
   active,
   children,
@@ -45,9 +44,10 @@ function ModeBtn({
       type="button"
       onClick={() => setTheme(mode)}
       aria-pressed={active}
-      aria-label={`${mode} theme`}
-      className={`inline-flex h-9 items-center justify-center gap-1.5 rounded-[6px] px-2.5 text-xs font-medium transition-colors ${
-        active ? "bg-bas-primary text-bas-on-primary" : "text-bas-muted hover:text-bas-heading"
+      aria-label={`${mode === "dark" ? "Dark" : "Light"} appearance`}
+      title={mode === "dark" ? "Dark" : "Light"}
+      className={`relative z-10 inline-flex h-full flex-1 items-center justify-center rounded-full transition-colors duration-200 ${
+        active ? "text-bas-heading" : "text-bas-muted hover:text-bas-heading"
       }`}
     >
       {children}
@@ -57,21 +57,35 @@ function ModeBtn({
 
 export function AppearanceToggles({ className = "" }: { className?: string }) {
   const theme = useAppearance((s) => s.theme);
+  const light = theme === "light";
 
   return (
     <div
       role="group"
-      aria-label="Theme"
-      className={`inline-flex h-10 items-center rounded-[8px] border border-bas-hairline bg-bas-field p-0.5 ${className}`}
+      aria-label="Appearance"
+      className={`relative inline-flex h-8 w-[68px] shrink-0 items-stretch rounded-full p-[3px] ${className}`}
+      style={{
+        background: light ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.08)",
+        boxShadow: light ? "inset 0 1px 2px rgba(0,0,0,0.06)" : "inset 0 1px 2px rgba(0,0,0,0.35)",
+      }}
     >
-      <ModeBtn mode="dark" active={theme === "dark"}>
+      <span
+        aria-hidden
+        className="pointer-events-none absolute inset-y-[3px] left-[3px] w-[calc(50%-3px)] rounded-full transition-transform duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none"
+        style={{
+          transform: light ? "translateX(100%)" : "translateX(0)",
+          background: light ? "#ffffff" : "rgba(255,255,255,0.22)",
+          boxShadow: light
+            ? "0 1px 2px rgba(0,0,0,0.12), 0 0 0 0.5px rgba(0,0,0,0.04)"
+            : "0 1px 2px rgba(0,0,0,0.4), inset 0 0.5px 0 rgba(255,255,255,0.18)",
+        }}
+      />
+      <Seg mode="dark" active={!light}>
         <IconMoon />
-        <span className="hidden sm:inline">Dark</span>
-      </ModeBtn>
-      <ModeBtn mode="light" active={theme === "light"}>
+      </Seg>
+      <Seg mode="light" active={light}>
         <IconSun />
-        <span className="hidden sm:inline">Light</span>
-      </ModeBtn>
+      </Seg>
     </div>
   );
 }

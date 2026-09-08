@@ -13,6 +13,7 @@ import { adminFetch } from "@/lib/admin/client";
 import { downloadCsv } from "@/lib/admin/csv";
 import type { AgentPatch } from "@/lib/admin/types";
 import type { MarketplaceAgent } from "@/lib/agents/types";
+import { nextTrendingIds } from "@/lib/agents/trending";
 import { formatUsd, shortAddr } from "@/lib/format";
 
 type Filter = "all" | "hireable" | "featured" | "live" | "custom" | "scan";
@@ -38,6 +39,7 @@ export default function AdminAgentsPage() {
   const toast = useToast();
   const [agents, setAgents] = useState<MarketplaceAgent[]>([]);
   const [overrides, setOverrides] = useState<Record<string, AgentPatch>>({});
+  const [trendingIds, setTrendingIds] = useState<string[]>([]);
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
   const [error, setError] = useState<string | null>(null);
@@ -45,11 +47,14 @@ export default function AdminAgentsPage() {
   const [busy, setBusy] = useState<string | null>(null);
 
   async function load() {
-    const d = await adminFetch<{ agents: MarketplaceAgent[]; overrides: Record<string, AgentPatch> }>(
-      "/api/admin/agents",
-    );
+    const d = await adminFetch<{
+      agents: MarketplaceAgent[];
+      overrides: Record<string, AgentPatch>;
+      trendingIds: string[];
+    }>("/api/admin/agents");
     setAgents(d.agents);
     setOverrides(d.overrides);
+    setTrendingIds(d.trendingIds ?? []);
     setLoading(false);
   }
 
@@ -85,6 +90,24 @@ export default function AdminAgentsPage() {
         .includes(n);
     });
   }, [agents, q, filter, overrides]);
+
+  async function toggleTrending(id: string) {
+    const on = !trendingIds.includes(id);
+    const next = nextTrendingIds(trendingIds, id, on);
+    setBusy(`${id}:trending`);
+    try {
+      await adminFetch("/api/admin/settings", {
+        method: "PATCH",
+        body: JSON.stringify({ trendingIds: next }),
+      });
+      setTrendingIds(next);
+      toast("ok", on ? "On home trending" : "Removed from trending");
+    } catch (e) {
+      toast("err", e instanceof Error ? e.message : "Update failed");
+    } finally {
+      setBusy(null);
+    }
+  }
 
   async function toggle(id: string, field: "hireable" | "featured") {
     const current = agents.find((a) => a.id === id);
@@ -225,6 +248,14 @@ export default function AdminAgentsPage() {
                 busy={busy === `${a.id}:featured`}
                 onClick={() => void toggle(a.id, "featured")}
               />
+              <FlagBtn
+                on={trendingIds.includes(a.id)}
+                label="Trending"
+                onLabel="Trending"
+                offLabel="Trend"
+                busy={busy === `${a.id}:trending`}
+                onClick={() => void toggleTrending(a.id)}
+              />
               <Button size="sm" variant="secondary" href={`/admin/agents/${encodeURIComponent(a.id)}`}>
                 Edit
               </Button>
@@ -272,6 +303,14 @@ export default function AdminAgentsPage() {
                     offLabel="Feature"
                     busy={busy === `${a.id}:featured`}
                     onClick={() => void toggle(a.id, "featured")}
+                  />
+                  <FlagBtn
+                    on={trendingIds.includes(a.id)}
+                    label="Trending"
+                    onLabel="Trending"
+                    offLabel="Trend"
+                    busy={busy === `${a.id}:trending`}
+                    onClick={() => void toggleTrending(a.id)}
                   />
                 </div>
               ),

@@ -69,7 +69,7 @@ export default function ClaimPage() {
           <input
             value={chainId}
             onChange={(e) => setChainId(e.target.value)}
-            className="num mt-1 h-10 w-full rounded-[8px] border border-bas-hairline bg-bas-canvas px-3 text-bas-heading"
+            className="num mt-1 h-10 w-full admin-field px-3 text-bas-heading"
           />
         </label>
         <label className="mt-3 block text-xs text-bas-muted">
@@ -78,7 +78,7 @@ export default function ClaimPage() {
             value={tokenId}
             onChange={(e) => setTokenId(e.target.value)}
             placeholder="8004scan token id"
-            className="num mt-1 h-10 w-full rounded-[8px] border border-bas-hairline bg-bas-canvas px-3 text-bas-heading"
+            className="num mt-1 h-10 w-full admin-field px-3 text-bas-heading"
           />
         </label>
         <label className="mt-3 block text-xs text-bas-muted">
@@ -87,7 +87,7 @@ export default function ClaimPage() {
             value={job}
             onChange={(e) => setJob(e.target.value)}
             rows={3}
-            className="mt-1 w-full rounded-[8px] border border-bas-hairline bg-bas-canvas px-3 py-2 text-sm text-bas-heading"
+            className="mt-1 w-full admin-field px-3 py-2 text-sm text-bas-heading"
           />
         </label>
         <label className="mt-3 block text-xs text-bas-muted">
@@ -95,7 +95,7 @@ export default function ClaimPage() {
           <input
             value={pancake}
             onChange={(e) => setPancake(e.target.value)}
-            className="mt-1 h-10 w-full rounded-[8px] border border-bas-hairline bg-bas-canvas px-3 text-sm text-bas-heading"
+            className="mt-1 h-10 w-full admin-field px-3 text-sm text-bas-heading"
           />
         </label>
         <label className="mt-3 block text-xs text-bas-muted">
@@ -103,7 +103,7 @@ export default function ClaimPage() {
           <input
             value={priceUsd}
             onChange={(e) => setPriceUsd(e.target.value)}
-            className="num mt-1 h-10 w-full rounded-[8px] border border-bas-hairline bg-bas-canvas px-3 text-bas-heading"
+            className="num mt-1 h-10 w-full admin-field px-3 text-bas-heading"
           />
         </label>
         {error ? <p className="mt-3 text-sm text-bas-down">{error}</p> : null}

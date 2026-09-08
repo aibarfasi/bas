@@ -361,7 +361,7 @@ export default function SessionPage({
                   max={168}
                   value={hours}
                   onChange={(e) => setHours(Number(e.target.value))}
-                  className="num mt-1 h-10 w-full rounded-[8px] border border-bas-hairline bg-bas-canvas px-3 text-bas-heading"
+                  className="num mt-1 h-10 w-full admin-field px-3 text-bas-heading"
                 />
               </label>
               <Button className="mt-2" variant="secondary" disabled={busy} onClick={() => push("renew", { hours })}>
@@ -375,7 +375,7 @@ export default function SessionPage({
                   <input
                     value={extraCap}
                     onChange={(e) => setExtraCap(e.target.value)}
-                    className="num mt-1 h-10 w-full rounded-[8px] border border-bas-hairline bg-bas-canvas px-3 text-bas-heading"
+                    className="num mt-1 h-10 w-full admin-field px-3 text-bas-heading"
                   />
                 </label>
                 <Button className="mt-2" variant="secondary" disabled={busy} onClick={() => push("topup", { extraCap })}>
@@ -392,7 +392,7 @@ export default function SessionPage({
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
                   placeholder="Allowlist miss, over-cap, or other"
-                  className="mt-1 h-10 w-full rounded-[8px] border border-bas-hairline bg-bas-canvas px-3 text-sm text-bas-heading"
+                  className="mt-1 h-10 w-full admin-field px-3 text-sm text-bas-heading"
                 />
               </label>
               <div className="mt-2 flex flex-wrap gap-2">

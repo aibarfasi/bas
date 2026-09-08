@@ -10,7 +10,9 @@ import { Button } from "@/components/ui/Button";
 import { adminFetch } from "@/lib/admin/client";
 import { downloadCsv } from "@/lib/admin/csv";
 import type { DeployMap, SiteSettings } from "@/lib/admin/types";
+import { TrendingEditor } from "@/components/admin/TrendingEditor";
 import { FEATURED_AGENTS } from "@/lib/agents/featured";
+import type { MarketplaceAgent } from "@/lib/agents/types";
 import { categoryLabel } from "@/lib/categories";
 import { explorerTx, shortAddr } from "@/lib/format";
 
@@ -148,6 +150,7 @@ export default function AdminSettingsPage() {
   const fileRef = useRef<HTMLInputElement>(null);
   const [settings, setSettings] = useState<SiteSettings | null>(null);
   const [original, setOriginal] = useState<SiteSettings | null>(null);
+  const [sellers, setSellers] = useState<MarketplaceAgent[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
@@ -157,10 +160,14 @@ export default function AdminSettingsPage() {
   const [pendingFile, setPendingFile] = useState<File | null>(null);
 
   useEffect(() => {
-    adminFetch<{ settings: SiteSettings }>("/api/admin/settings")
-      .then((d) => {
+    Promise.all([
+      adminFetch<{ settings: SiteSettings }>("/api/admin/settings"),
+      adminFetch<{ agents: MarketplaceAgent[] }>("/api/admin/catalog"),
+    ])
+      .then(([d, a]) => {
         setSettings(d.settings);
         setOriginal(d.settings);
+        setSellers(a.agents);
       })
       .catch((e) => setError(e instanceof Error ? e.message : "Failed"))
       .finally(() => setLoading(false));
@@ -459,6 +466,14 @@ export default function AdminSettingsPage() {
                 </Field>
               </div>
             </div>
+          </section>
+
+          <section className="mt-6 rounded-[12px] border border-bas-hairline bg-bas-card p-4 sm:p-5">
+            <TrendingEditor
+              ids={settings.trendingIds ?? []}
+              agents={sellers}
+              onChange={(trendingIds) => set("trendingIds", trendingIds)}
+            />
           </section>
 
           <section className="mt-6 rounded-[12px] border border-bas-hairline bg-bas-card p-4 sm:p-5">

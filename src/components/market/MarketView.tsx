@@ -85,7 +85,7 @@ export function MarketView({
               key={f.id}
               type="button"
               onClick={() => setCategory(f.id)}
-              className={`h-10 shrink-0 rounded-[6px] px-3 text-sm ${
+              className={`bas-mac-chip shrink-0 ${
                 cat === f.id
                   ? "bg-bas-primary text-bas-on-primary"
                   : "bg-bas-card text-bas-body hover:bg-bas-elevated"
@@ -102,13 +102,13 @@ export function MarketView({
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="Search name, token, or owner"
-              className="h-10 w-full rounded-[8px] border border-bas-hairline bg-bas-card pl-10 pr-10 text-sm text-bas-heading outline-none placeholder:text-bas-muted focus:border-bas-primary"
+              className="admin-field h-8 w-full pl-10 pr-10 text-[13px] text-bas-heading outline-none placeholder:text-bas-muted"
             />
             {q ? (
               <button
                 type="button"
                 onClick={() => setQ("")}
-                className="absolute right-2 top-1/2 h-7 w-7 -translate-y-1/2 rounded-[6px] text-xs text-bas-muted hover:bg-bas-elevated hover:text-bas-heading"
+                className="bas-mac-icon absolute right-1 top-1/2 -translate-y-1/2 text-xs text-bas-muted hover:bg-bas-elevated hover:text-bas-heading"
                 aria-label="Clear search"
               >
                 ✕
@@ -119,7 +119,7 @@ export function MarketView({
             type="button"
             onClick={() => setLiveOnly((v) => !v)}
             aria-pressed={liveOnly}
-            className={`h-10 shrink-0 rounded-[6px] border px-3 text-sm ${
+            className={`bas-mac-chip shrink-0 border ${
               liveOnly
                 ? "border-bas-up/40 bg-bas-up/15 text-bas-up"
                 : "border-bas-hairline bg-bas-card text-bas-muted hover:text-bas-heading"
@@ -131,7 +131,7 @@ export function MarketView({
             type="button"
             onClick={() => setShowUncat((v) => !v)}
             aria-pressed={showUncat}
-            className={`h-10 shrink-0 rounded-[6px] border px-3 text-sm ${
+            className={`bas-mac-chip shrink-0 border ${
               showUncat
                 ? "border-bas-primary/40 bg-bas-primary/15 text-bas-heading"
                 : "border-bas-hairline bg-bas-card text-bas-muted hover:text-bas-heading"
@@ -202,21 +202,21 @@ export function MarketView({
                     <button
                       type="button"
                       onClick={() => compare.toggle(a.id)}
-                      className={`h-10 rounded-[6px] px-3 text-xs ${
+                      className={`bas-mac-chip ${
                         compare.has(a.id)
                           ? "bg-bas-primary text-bas-on-primary"
-                          : "bg-bas-card"
+                          : "border border-bas-hairline bg-bas-card"
                       }`}
                     >
                       {compare.has(a.id) ? "Added" : "Compare"}
                     </button>
                     <WatchToggle agent={a} />
                     {canActivate(a) ? (
-                      <Button href={hirePath(a.chainId, a.tokenId)} className="h-10 px-4">
+                      <Button href={hirePath(a.chainId, a.tokenId)} size="sm">
                         {hireCta(a)}
                       </Button>
                     ) : (
-                      <Button href={agentPath(a.chainId, a.tokenId)} variant="secondary" className="h-10 px-4">
+                      <Button href={agentPath(a.chainId, a.tokenId)} variant="secondary" size="sm">
                         View
                       </Button>
                     )}
@@ -241,16 +241,16 @@ export function MarketView({
       ) : null}
 
       {compare.ids.length > 0 ? (
-        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-bas-hairline bg-bas-card px-4 py-3 md:px-6">
-          <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-3">
-            <div className="text-sm">
+        <div className="fixed inset-x-0 bottom-4 z-30 flex justify-center px-4">
+          <div className="flex w-full max-w-xl items-center justify-between gap-3 rounded-[12px] border border-bas-hairline bg-bas-card px-3 py-2 shadow-[0_8px_32px_rgba(0,0,0,0.28)] backdrop-blur-xl backdrop-saturate-150 md:px-4">
+            <div className="text-[13px] tracking-[-0.01em]">
               <span className="num text-bas-primary">{compare.ids.length}</span> selected
             </div>
-            <div className="flex gap-2">
-              <Button variant="secondary" onClick={() => compare.clear()}>
+            <div className="flex gap-1.5">
+              <Button variant="secondary" size="sm" onClick={() => compare.clear()}>
                 Clear
               </Button>
-              <Button href={compare.ids.length ? `/compare?ids=${encodeURIComponent(compare.ids.join(","))}` : "/compare"}>Compare</Button>
+              <Button size="sm" href={compare.ids.length ? `/compare?ids=${encodeURIComponent(compare.ids.join(","))}` : "/compare"}>Compare</Button>
             </div>
           </div>
         </div>
@@ -327,7 +327,7 @@ function AgentMobileCard({ agent: a }: { agent: MarketplaceAgent }) {
         <button
           type="button"
           onClick={() => compare.toggle(a.id)}
-          className="h-10 flex-1 rounded-[6px] bg-bas-elevated text-sm"
+          className="bas-mac-chip flex-1 border border-bas-hairline bg-bas-elevated"
         >
           {compare.has(a.id) ? "Added" : "Compare"}
         </button>

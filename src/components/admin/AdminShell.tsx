@@ -197,7 +197,7 @@ function ShellInner({ children }: { children: ReactNode }) {
               </Link>
               <button
                 type="button"
-                className="inline-flex h-10 w-10 items-center justify-center rounded-[8px] text-bas-muted hover:bg-bas-card hover:text-bas-heading"
+                className="bas-mac-icon text-bas-muted hover:bg-bas-card hover:text-bas-heading"
                 aria-label="Hide sidebar"
                 title="Hide sidebar ["
                 onClick={() => {
@@ -224,7 +224,7 @@ function ShellInner({ children }: { children: ReactNode }) {
                         <Link
                           key={item.href}
                           href={item.href}
-                          className={`flex min-h-11 items-center justify-between rounded-[8px] px-3 py-2 text-sm ${
+                          className={`flex min-h-9 items-center justify-between rounded-[8px] px-3 py-1.5 text-[13px] tracking-[-0.01em] ${
                             active
                               ? "bg-bas-primary text-bas-on-primary"
                               : "text-bas-body hover:bg-bas-card"
@@ -246,7 +246,7 @@ function ShellInner({ children }: { children: ReactNode }) {
             <div className="admin-safe mt-4 flex flex-col gap-1 border-t border-bas-hairline pt-3 text-sm">
               <button
                 type="button"
-                className="flex min-h-11 items-center gap-2 rounded-[8px] px-3 text-left text-bas-muted hover:bg-bas-card hover:text-bas-heading"
+                className="flex min-h-9 items-center gap-2 rounded-[8px] px-3 text-left text-[13px] text-bas-muted hover:bg-bas-card hover:text-bas-heading"
                 onClick={() => setCmd(true)}
               >
                 <IconSearch className="h-4 w-4" />
@@ -255,10 +255,10 @@ function ShellInner({ children }: { children: ReactNode }) {
                   <Kbd>/</Kbd>
                 </span>
               </button>
-              <Link href="/market" className="flex min-h-11 items-center rounded-[8px] px-3 text-bas-muted hover:bg-bas-card hover:text-bas-heading">
+              <Link href="/market" className="flex min-h-9 items-center rounded-[8px] px-3 text-[13px] text-bas-muted hover:bg-bas-card hover:text-bas-heading">
                 View market
               </Link>
-              <button type="button" onClick={logout} className="min-h-11 rounded-[8px] px-3 text-left text-bas-down hover:bg-bas-down/10">
+              <button type="button" onClick={logout} className="min-h-9 rounded-[8px] px-3 text-left text-[13px] text-bas-down hover:bg-bas-down/10">
                 Sign out
               </button>
             </div>
@@ -269,7 +269,7 @@ function ShellInner({ children }: { children: ReactNode }) {
               <div className="flex min-w-0 items-center gap-2">
                 <button
                   type="button"
-                  className={`inline-flex h-10 w-10 items-center justify-center rounded-[8px] bg-bas-card text-bas-heading ${
+                  className={`bas-mac-icon bg-bas-card text-bas-heading ${
                     drawer ? "hidden" : ""
                   } ${rail ? "md:hidden" : ""}`}
                   onClick={toggleRail}
@@ -287,7 +287,7 @@ function ShellInner({ children }: { children: ReactNode }) {
                 <button
                   type="button"
                   onClick={() => setCmd(true)}
-                  className="admin-field flex h-10 w-full max-w-xl items-center gap-2 px-3 text-sm text-bas-muted transition-colors hover:text-bas-heading"
+                  className="admin-field flex h-8 w-full max-w-xl items-center gap-2 px-3 text-[13px] text-bas-muted transition-colors hover:text-bas-heading"
                 >
                   <IconSearch className="h-4 w-4 shrink-0" />
                   <span className="min-w-0 flex-1 truncate text-left">Search pages and actions</span>
@@ -297,7 +297,7 @@ function ShellInner({ children }: { children: ReactNode }) {
               <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2 md:ml-0">
                 <button
                   type="button"
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-[8px] text-bas-muted hover:bg-bas-card hover:text-bas-heading md:hidden"
+                  className="bas-mac-icon text-bas-muted hover:bg-bas-card hover:text-bas-heading md:hidden"
                   onClick={() => setCmd(true)}
                   aria-label="Search"
                 >
@@ -307,7 +307,7 @@ function ShellInner({ children }: { children: ReactNode }) {
                 <AppearanceToggles />
                 <Link
                   href="/"
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-[8px] text-bas-muted hover:bg-bas-card hover:text-bas-heading"
+                  className="bas-mac-icon text-bas-muted hover:bg-bas-card hover:text-bas-heading"
                   aria-label="Home"
                 >
                   <IconHome />

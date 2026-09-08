@@ -68,17 +68,17 @@ export default function WatchPage() {
                 </div>
                 <div className="flex gap-2">
                   {agent && canActivate(agent) ? (
-                    <Button href={hirePath(w.chainId, w.tokenId)} className="h-10 px-4">
+                    <Button href={hirePath(w.chainId, w.tokenId)} size="sm">
                       Hire
                     </Button>
                   ) : (
-                    <Button href={agentPath(w.chainId, w.tokenId)} variant="secondary" className="h-10 px-4">
+                    <Button href={agentPath(w.chainId, w.tokenId)} variant="secondary" size="sm">
                       View
                     </Button>
                   )}
                   <button
                     type="button"
-                    className="h-10 rounded-[6px] bg-bas-elevated px-3 text-xs"
+                    className="bas-mac-chip border border-bas-hairline bg-bas-elevated"
                     onClick={() => toggle(w)}
                   >
                     Remove

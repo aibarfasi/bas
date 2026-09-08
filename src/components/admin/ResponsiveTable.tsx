@@ -105,9 +105,9 @@ export function Chip({
     <button
       type="button"
       onClick={onClick}
-      className={`h-10 shrink-0 rounded-[8px] border px-3 text-sm ${
+      className={`bas-mac-chip shrink-0 border ${
         active
-          ? "border-bas-primary bg-bas-primary text-bas-on-primary"
+          ? "border-transparent bg-bas-primary text-bas-on-primary"
           : "border-bas-hairline bg-bas-card text-bas-body hover:bg-bas-elevated"
       }`}
     >

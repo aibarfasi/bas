@@ -10,8 +10,10 @@ export function WatchToggle({ agent }: { agent: MarketplaceAgent }) {
     <button
       type="button"
       onClick={() => toggle(toWatchSnapshot(agent))}
-      className={`inline-flex h-10 items-center rounded-[6px] px-4 text-sm font-semibold ${
-        has ? "bg-bas-primary text-bas-on-primary" : "bg-bas-card text-bas-body"
+      className={`bas-mac-chip border ${
+        has
+          ? "border-transparent bg-bas-primary text-bas-on-primary"
+          : "border-bas-hairline bg-bas-card text-bas-body hover:bg-bas-elevated"
       }`}
     >
       {has ? "Watching" : "Watch"}

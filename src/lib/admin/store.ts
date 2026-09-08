@@ -17,6 +17,7 @@ import type { SessionReceipt } from "@/lib/altana/ledger";
 import type { HireJob } from "@/lib/hire/types";
 import type { SellerClaim } from "@/lib/claim/types";
 import type { X402Receipt } from "@/lib/x402/receipts";
+import { DEFAULT_TRENDING_IDS, sanitizeTrendingIds } from "@/lib/agents/trending";
 import { loadSqlJson, saveSqlJson } from "@/lib/persist/sql";
 
 const FILE = join(process.cwd(), "data", "admin.json");
@@ -31,6 +32,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   hideUncategorized: false,
   intakeSubmitted: false,
   deployments: {},
+  trendingIds: [...DEFAULT_TRENDING_IDS],
 };
 
 function emptyState(): AdminState {
@@ -60,7 +62,12 @@ function loadFromDisk(): AdminState | null {
       ...raw,
       overrides: raw.overrides ?? {},
       custom: raw.custom ?? [],
-      settings: { ...DEFAULT_SETTINGS, ...raw.settings, deployments: raw.settings?.deployments ?? {} },
+      settings: {
+        ...DEFAULT_SETTINGS,
+        ...raw.settings,
+        deployments: raw.settings?.deployments ?? {},
+        trendingIds: sanitizeTrendingIds(raw.settings?.trendingIds ?? DEFAULT_SETTINGS.trendingIds),
+      },
       allowlist: raw.allowlist ?? [],
       audit: raw.audit ?? [],
       sessions: raw.sessions ?? [],
@@ -110,7 +117,12 @@ export async function hydrateFromSql() {
       ...remote,
       overrides: remote.overrides ?? {},
       custom: remote.custom ?? [],
-      settings: { ...DEFAULT_SETTINGS, ...remote.settings, deployments: remote.settings?.deployments ?? {} },
+      settings: {
+        ...DEFAULT_SETTINGS,
+        ...remote.settings,
+        deployments: remote.settings?.deployments ?? {},
+        trendingIds: sanitizeTrendingIds(remote.settings?.trendingIds ?? DEFAULT_SETTINGS.trendingIds),
+      },
       allowlist: remote.allowlist ?? [],
       audit: remote.audit ?? [],
       sessions: remote.sessions ?? [],
@@ -200,14 +212,16 @@ export function getSettings() {
     ...DEFAULT_SETTINGS,
     ...cur,
     deployments: cur.deployments ?? {},
+    trendingIds: sanitizeTrendingIds(cur.trendingIds),
   };
 }
 
 export function updateSettings(patch: Partial<SiteSettings>) {
   const settings = { ...state().settings, ...patch };
   if (patch.deployments) settings.deployments = { ...state().settings.deployments, ...patch.deployments };
+  if (patch.trendingIds) settings.trendingIds = sanitizeTrendingIds(patch.trendingIds);
   commit({ settings }, "settings.update", Object.keys(patch).join(", "));
-  return settings;
+  return getSettings();
 }
 
 export function getOverrides() {
@@ -265,7 +279,13 @@ export function importSnapshot(raw: {
       overrides: raw.overrides ?? state().overrides,
       custom: raw.custom ?? state().custom,
       settings: raw.settings
-        ? { ...DEFAULT_SETTINGS, ...state().settings, ...raw.settings, deployments: raw.settings.deployments ?? state().settings.deployments }
+        ? {
+            ...DEFAULT_SETTINGS,
+            ...state().settings,
+            ...raw.settings,
+            deployments: raw.settings.deployments ?? state().settings.deployments,
+            trendingIds: sanitizeTrendingIds(raw.settings.trendingIds ?? state().settings.trendingIds),
+          }
         : state().settings,
       allowlist: raw.allowlist ?? state().allowlist,
       sessions: raw.sessions ?? state().sessions,

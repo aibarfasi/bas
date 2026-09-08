@@ -2,15 +2,17 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin/auth";
 import { resolveFeaturedAgents } from "@/lib/admin/catalog";
 import { emptyDraft } from "@/lib/admin/draft";
-import { addCustomAgent, getOverrides } from "@/lib/admin/store";
+import { addCustomAgent, getOverrides, getSettings, hydrateFromSql } from "@/lib/admin/store";
 import type { AgentDraft } from "@/lib/admin/types";
 
 export async function GET() {
   const denied = await requireAdmin();
   if (denied) return denied;
+  await hydrateFromSql();
   return NextResponse.json({
     agents: resolveFeaturedAgents(),
     overrides: getOverrides(),
+    trendingIds: getSettings().trendingIds,
   });
 }
 

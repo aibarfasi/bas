@@ -69,14 +69,16 @@ export function Header({ light = false }: { light?: boolean }) {
         <div className="flex items-center gap-2">
           <AppearanceToggles />
           <WalletButton light={light} />
-          <button
-            type="button"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-[6px] md:hidden"
-            onClick={() => setOpen((v) => !v)}
-            aria-label="Menu"
-          >
-            <span className="text-lg">☰</span>
-          </button>
+          <div className="md:hidden">
+            <button
+              type="button"
+              className="bas-mac-icon text-bas-heading"
+              onClick={() => setOpen((v) => !v)}
+              aria-label="Menu"
+            >
+              <span className="text-lg">☰</span>
+            </button>
+          </div>
         </div>
       </div>
       {open ? (

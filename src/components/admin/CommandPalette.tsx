@@ -14,7 +14,7 @@ const ACTIONS = [
   { href: "/admin/allowlist", label: "Allowlist", hint: "Spend contracts", group: "Ops" },
   { href: "/admin/health", label: "Health", hint: "Probe faces and rails", group: "System" },
   { href: "/admin/submission", label: "Submission", hint: "Intake and deploy", group: "System" },
-  { href: "/admin/settings", label: "Settings", hint: "Banner and wallets", group: "System" },
+  { href: "/admin/settings", label: "Settings", hint: "Trending, banner, wallets", group: "System" },
   { href: "/admin/activity", label: "Activity", hint: "Audit trail", group: "System" },
   { href: "/market", label: "Open market", hint: "Public catalog", group: "Go" },
   { href: "/", label: "Home", hint: "Marketplace front", group: "Go" },
@@ -76,12 +76,12 @@ export function CommandPalette({
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-start sm:px-4 sm:pt-[12vh]">
-      <button type="button" className="absolute inset-0 bg-bas-overlay" aria-label="Close search" onClick={onClose} />
+      <button type="button" className="absolute inset-0 bg-bas-overlay/90 backdrop-blur-sm" aria-label="Close search" onClick={onClose} />
       <div
         role="dialog"
         aria-modal="true"
         aria-label="Search"
-        className="relative z-10 w-full max-w-xl overflow-hidden rounded-t-[16px] border border-bas-hairline bg-bas-surface-soft shadow-2xl sm:rounded-[12px]"
+        className="admin-panel relative z-10 w-full max-w-xl overflow-hidden rounded-t-[16px] border border-bas-hairline bg-bas-surface-soft sm:rounded-[12px]"
       >
         <label className="flex items-center gap-3 border-b border-bas-hairline px-4">
           <IconSearch className="h-5 w-5 shrink-0 text-bas-muted" />
@@ -119,8 +119,8 @@ export function CommandPalette({
                 ) : null}
                 <button
                   type="button"
-                  className={`flex min-h-11 w-full items-center justify-between gap-3 rounded-[8px] px-3 py-2 text-left text-sm ${
-                    i === active ? "bg-bas-field text-bas-heading" : "text-bas-body hover:bg-bas-elevated"
+                  className={`flex min-h-9 w-full items-center justify-between gap-3 rounded-[8px] px-3 py-2 text-left text-[13px] tracking-[-0.01em] ${
+                    i === active ? "bg-bas-elevated text-bas-heading" : "text-bas-body hover:bg-bas-card"
                   }`}
                   onMouseEnter={() => setActive(i)}
                   onClick={() => go(a.href)}

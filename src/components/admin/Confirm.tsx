@@ -18,7 +18,7 @@ export function Confirm({
   onConfirm: () => void;
 }) {
   return (
-    <div className="fixed inset-0 z-40 flex items-end justify-center bg-bas-overlay p-3 sm:items-center">
+    <div className="fixed inset-0 z-40 flex items-end justify-center bg-bas-overlay/90 p-3 backdrop-blur-sm sm:items-center">
       <div className="admin-panel w-full max-w-sm rounded-[12px] border border-bas-hairline bg-bas-surface-soft p-5 admin-safe">
         <h2 className="text-lg font-semibold text-bas-heading">{title}</h2>
         <p className="mt-2 text-sm leading-6 text-bas-muted">{body}</p>

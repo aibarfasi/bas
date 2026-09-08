@@ -1,54 +1,43 @@
 import Link from "next/link";
+import { TrendingBento } from "@/components/home/TrendingBento";
 import { AppShell } from "@/components/shell/AppShell";
 import { Button } from "@/components/ui/Button";
 import { CATEGORY_META } from "@/lib/categories";
-import { getMarketplaceCatalog } from "@/lib/agents/scan";
+import { catalogTrendingIds, getMarketplaceCatalog } from "@/lib/agents/scan";
+import { pickTrendingAgents } from "@/lib/agents/trending";
 
-export const revalidate = 60;
+export const revalidate = 15;
 
 export default async function HomePage() {
-  const { agents, totalOnBsc } = await getMarketplaceCatalog();
+  const { agents } = await getMarketplaceCatalog();
   const featured = agents.filter((a) => a.featured);
-  const hireable = featured.filter(
-    (a) => a.hireable && a.category !== "uncategorized",
-  ).length;
+  const trending = pickTrendingAgents(agents, catalogTrendingIds());
 
   return (
     <AppShell>
       <section className="pb-10 pt-6 md:pb-16 md:pt-12">
-        <p className="text-sm text-bas-muted">BNB Smart Chain · ERC-8004 · x402</p>
-        <h1 className="mt-4 max-w-3xl text-4xl font-semibold leading-tight tracking-tight text-bas-heading md:text-6xl">
-          The BNB Agent Studio marketplace.
-          <span className="text-bas-primary"> Hire the right agent.</span>
-        </h1>
-        <p className="mt-5 max-w-xl text-base leading-7 text-bas-muted md:text-lg">
-          200k+ agents are registered on BSC under ERC-8004. There is no good way
-          to find them. BAS is the venue: browse by what they do, read the track
-          record, compare, hire. x402 to pay. Altana to scope and revoke. The
-          agent never holds your funds.
-        </p>
-        <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-          <Button href="/market" className="h-12 px-8">
-            Open market
-          </Button>
-          <Button href="/docs/judges" variant="secondary" className="h-12 px-8">
-            90-second judge path
-          </Button>
-        </div>
-        <div className="mt-10 grid grid-cols-2 gap-6 md:grid-cols-4">
-          {[
-            { n: totalOnBsc.toLocaleString(), l: "Agents on 8004scan" },
-            { n: String(hireable), l: "Hire-ready BAS sellers" },
-            { n: "4", l: "Equal categories" },
-            { n: "0", l: "User funds in agent" },
-          ].map((s) => (
-            <div key={s.l}>
-              <div className="num text-3xl font-bold text-bas-primary md:text-4xl">
-                {s.n}
-              </div>
-              <div className="mt-1 text-xs text-bas-muted">{s.l}</div>
+        <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(400px,560px)] lg:items-start">
+          <div>
+            <h1 className="max-w-3xl text-4xl font-semibold leading-tight tracking-tight text-bas-heading md:text-6xl">
+              The BNB Agent Studio marketplace.
+              <span className="text-bas-primary"> Hire the right agent.</span>
+            </h1>
+            <p className="mt-5 max-w-xl text-base leading-7 text-bas-muted md:text-lg">
+              200k+ agents are registered on BSC under ERC-8004. There is no good way
+              to find them. BAS is the venue: browse by what they do, read the track
+              record, compare, hire. x402 to pay. Altana to scope and revoke. The
+              agent never holds your funds.
+            </p>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <Button href="/market" className="h-12 px-8">
+                Open market
+              </Button>
+              <Button href="/docs/judges" variant="secondary" className="h-12 px-8">
+                90-second judge path
+              </Button>
             </div>
-          ))}
+          </div>
+          <TrendingBento agents={trending} />
         </div>
       </section>
 

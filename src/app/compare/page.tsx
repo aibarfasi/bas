@@ -150,7 +150,7 @@ function CompareView() {
                       <button
                         type="button"
                         onClick={() => toggle(a.id)}
-                        className="h-10 rounded-[6px] bg-bas-card px-3 text-xs"
+                        className="bas-mac-chip border border-bas-hairline bg-bas-card"
                       >
                         Remove
                       </button>

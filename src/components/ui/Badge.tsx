@@ -28,7 +28,7 @@ export function LiveBadge({ live }: { live: boolean | null }) {
 
 export function CategoryBadge({ cat }: { cat: Category }) {
   return (
-    <span className="rounded-[4px] bg-bas-elevated px-2 py-0.5 text-xs text-bas-body">
+    <span className="rounded-[4px] bg-bas-elevated px-2 py-0.5 text-[11px] font-medium tracking-[-0.01em] text-bas-body">
       {categoryLabel(cat)}
     </span>
   );
@@ -36,7 +36,7 @@ export function CategoryBadge({ cat }: { cat: Category }) {
 
 export function FeaturedBadge() {
   return (
-    <span className="rounded-[4px] bg-bas-primary px-2 py-0.5 text-xs font-semibold text-bas-on-primary">
+    <span className="rounded-[4px] bg-bas-primary px-2 py-0.5 text-[11px] font-semibold tracking-[-0.01em] text-bas-on-primary">
       BAS
     </span>
   );

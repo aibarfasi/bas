@@ -26,10 +26,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         {items.map((t) => (
           <div
             key={t.id}
-            className={`rounded-[8px] border px-3 py-2 text-sm ${
+            className={`rounded-[8px] border px-3.5 py-2.5 text-[13px] tracking-[-0.01em] backdrop-blur-xl backdrop-saturate-150 ${
               t.kind === "ok"
-                ? "border-bas-up/40 bg-bas-surface-soft text-bas-heading"
-                : "border-bas-down/40 bg-bas-surface-soft text-bas-heading"
+                ? "border-bas-up/30 bg-bas-surface-soft/90 text-bas-heading"
+                : "border-bas-down/30 bg-bas-surface-soft/90 text-bas-heading"
             }`}
           >
             {t.text}

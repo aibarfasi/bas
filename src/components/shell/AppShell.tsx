@@ -21,11 +21,11 @@ export function AppShell({
       <BinanceSidePattern />
       <a
         href="#main"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-[8px] focus:bg-bas-primary focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-bas-on-primary"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-[8px] focus:bg-bas-primary focus:px-4 focus:py-2 focus:text-[13px] focus:font-medium focus:text-bas-on-primary"
       >
         Skip to content
       </a>
-      <div className="relative z-10 mx-auto flex min-h-dvh w-full max-w-[1440px] flex-1 flex-col border-x border-bas-hairline">
+      <div className="relative z-10 mx-auto flex min-h-0 w-full max-w-[1440px] flex-1 flex-col border-x border-bas-hairline">
         <Header light={light} />
         <WatchAlerts />
         <SiteBanner />
