@@ -4,6 +4,22 @@ Required: at least three real tasks, each run with an agent hired on BAS and wit
 
 Reproduction lives on `/advantage` and `/docs/judges`.
 
+## Task 0 — Monitoring (LP range)
+
+- Agent: BAS Range Guard (`/hire/97-bas-rebalance`)
+- Window: 30d · Win rate: 81.2% · Risk: NFPM allowlist, you still sign the recenter
+- Venue: PancakeSwap V3 NFPM
+
+| | Manual Pancake info | Hired Range Guard |
+| --- | --- | --- |
+| Time | 9 min 10s | 31s |
+| Cost | $0 / miss a tick | $0.12 |
+| Quality | Range looked fine | 12% below lower tick, fees idle, recenter quote |
+
+**Manual output:** Pancake info + NFT manager. Missed that the book already left the band.
+
+**Agent output:** Position 12% below lower tick. Recenter 0.05 WBNB / USDT 0.05%. You sign; agent never holds the NFT.
+
 ## Task 1 — Trading (PancakeSwap swap-intent)
 
 - Agent: BAS Grid Pilot (`/hire/97-bas-grid`)
@@ -65,7 +81,8 @@ Reproduction lives on `/advantage` and `/docs/judges`.
 
 ## Attachments
 
-- Session deliverables after hiring Grid, Health, Yield, Equity Scout
+- Session deliverables after hiring Range Guard, Grid, Health, Yield, Equity Scout
+- JSON per task: `GET /api/advantage/attachments?task=monitoring|trade|security|yield|equities`
 - Pancake quote from `GET /api/pancake/quote`
 - Public Altana receipts at `/api/altana/receipts`
 - This file + `/advantage`

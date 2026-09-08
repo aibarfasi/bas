@@ -1,6 +1,8 @@
 import { pancakePoolGap, pancakeYieldBoard, quotePancakeSwap } from "@/lib/pancake/quote";
 import { putPayment } from "@/lib/x402/receipts";
+import { isSignedPayment } from "@/lib/x402/typed";
 import { NextResponse } from "next/server";
+import { hydrateFromSql } from "@/lib/admin/store";
 
 const NAMES: Record<string, string> = {
   rebalance: "BAS Range Guard",
@@ -69,6 +71,7 @@ export async function POST(
   req: Request,
   ctx: { params: Promise<{ kind: string; face: string }> },
 ) {
+  await hydrateFromSql();
   const { kind, face } = await ctx.params;
   if (face !== "x402") {
     return NextResponse.json({ error: "Use GET for A2A card" }, { status: 405 });
@@ -80,9 +83,36 @@ export async function POST(
   };
   if (!body.payment) {
     return NextResponse.json(
-      { error: "Payment Required", hint: "POST payment: demo | EIP-712 grant sig" },
+      { error: "Payment Required", hint: "POST payment: EIP-712 x402 sig, or demo if no wallet" },
       { status: 402 },
     );
+  }
+  const signed = isSignedPayment(body.payment);
+  if (!signed && body.payment !== "demo") {
+    return NextResponse.json(
+      { error: "Payment Required", hint: "payment must be an EIP-712 signature or demo" },
+      { status: 402 },
+    );
+  }
+
+  let settled = false;
+  const facilitator = process.env.X402_FACILITATOR_URL;
+  if (signed && facilitator) {
+    try {
+      const fac = await fetch(facilitator, {
+        method: "POST",
+        headers: { "content-type": "application/json", accept: "application/json" },
+        body: JSON.stringify({
+          payment: body.payment,
+          resource: `/api/hire/faces/${kind}/x402`,
+          network: "bsc-testnet",
+          asset: "USDT",
+        }),
+      });
+      settled = fac.ok;
+    } catch {
+      settled = false;
+    }
   }
   const quote = await quotePancakeSwap({ amountIn: body.amountIn });
   const yields = pancakeYieldBoard();
@@ -157,7 +187,9 @@ export async function POST(
     payment: body.payment,
     recipient,
     paidAt: Date.now(),
-    demo: body.payment === "demo",
+    demo: !signed,
+    settled,
+    resource: `/api/hire/faces/${kind}/x402`,
   });
 
   return NextResponse.json({
@@ -165,6 +197,7 @@ export async function POST(
     rail: "x402",
     kind,
     receipt,
+    quote,
     result: work[kind] ?? work.yield,
   });
 }

@@ -1,23 +1,38 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { IconSearch, Kbd } from "@/components/admin/icons";
 
 const ACTIONS = [
-  { href: "/admin", label: "Overview", hint: "Dashboard" },
-  { href: "/admin/agents", label: "Sellers", hint: "Featured agents" },
-  { href: "/admin/agents/new", label: "Add seller", hint: "Create hireable agent" },
-  { href: "/admin/catalog", label: "Catalog", hint: "8004scan list" },
-  { href: "/admin/hires", label: "Hires", hint: "Sessions and jobs" },
-  { href: "/admin/proofs", label: "Proofs", hint: "Altana and x402" },
-  { href: "/admin/allowlist", label: "Allowlist", hint: "Spend contracts" },
-  { href: "/admin/health", label: "Health", hint: "Probe faces and rails" },
-  { href: "/admin/submission", label: "Submission", hint: "Intake and deploy" },
-  { href: "/admin/settings", label: "Settings", hint: "Banner and wallets" },
-  { href: "/admin/activity", label: "Activity", hint: "Audit trail" },
-  { href: "/market", label: "Open market", hint: "Public catalog" },
-  { href: "/docs/judges", label: "Judge path", hint: "90-second demo" },
+  { href: "/admin", label: "Overview", hint: "Dashboard", group: "Market" },
+  { href: "/admin/agents", label: "Sellers", hint: "Featured agents", group: "Market" },
+  { href: "/admin/agents/new", label: "Add seller", hint: "Create hireable agent", group: "Market" },
+  { href: "/admin/catalog", label: "Catalog", hint: "8004scan list", group: "Market" },
+  { href: "/admin/hires", label: "Hires", hint: "Sessions and jobs", group: "Ops" },
+  { href: "/admin/proofs", label: "Proofs", hint: "Altana and x402", group: "Ops" },
+  { href: "/admin/allowlist", label: "Allowlist", hint: "Spend contracts", group: "Ops" },
+  { href: "/admin/health", label: "Health", hint: "Probe faces and rails", group: "System" },
+  { href: "/admin/submission", label: "Submission", hint: "Intake and deploy", group: "System" },
+  { href: "/admin/settings", label: "Settings", hint: "Banner and wallets", group: "System" },
+  { href: "/admin/activity", label: "Activity", hint: "Audit trail", group: "System" },
+  { href: "/market", label: "Open market", hint: "Public catalog", group: "Go" },
+  { href: "/", label: "Home", hint: "Marketplace front", group: "Go" },
+  { href: "/docs/judges", label: "Judge path", hint: "90-second demo", group: "Go" },
 ];
+
+function mark(text: string, q: string) {
+  if (!q) return text;
+  const i = text.toLowerCase().indexOf(q.toLowerCase());
+  if (i < 0) return text;
+  return (
+    <>
+      {text.slice(0, i)}
+      <span className="text-bas-primary">{text.slice(i, i + q.length)}</span>
+      {text.slice(i + q.length)}
+    </>
+  );
+}
 
 export function CommandPalette({
   open,
@@ -27,6 +42,7 @@ export function CommandPalette({
   onClose: () => void;
 }) {
   const router = useRouter();
+  const input = useRef<HTMLInputElement>(null);
   const [q, setQ] = useState("");
   const [active, setActive] = useState(0);
 
@@ -34,12 +50,15 @@ export function CommandPalette({
     if (!open) {
       setQ("");
       setActive(0);
+      return;
     }
+    const t = window.setTimeout(() => input.current?.focus(), 20);
+    return () => window.clearTimeout(t);
   }, [open]);
 
   const rows = useMemo(() => {
-    const n = q.toLowerCase();
-    return ACTIONS.filter((a) => `${a.label} ${a.hint}`.toLowerCase().includes(n));
+    const n = q.trim().toLowerCase();
+    return ACTIONS.filter((a) => `${a.label} ${a.hint} ${a.group}`.toLowerCase().includes(n));
   }, [q]);
 
   useEffect(() => {
@@ -53,49 +72,87 @@ export function CommandPalette({
     onClose();
   }
 
+  let lastGroup = "";
+
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 sm:items-start sm:px-4 sm:pt-24">
-      <div className="w-full max-w-lg overflow-hidden rounded-t-[16px] border border-bas-hairline bg-bas-canvas sm:rounded-[12px]">
-        <input
-          autoFocus
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Jump to a page or action"
-          className="h-14 w-full border-b border-bas-hairline bg-transparent px-4 text-base text-bas-heading outline-none sm:h-12 sm:text-sm"
-          onKeyDown={(e) => {
-            if (e.key === "Escape") onClose();
-            if (e.key === "ArrowDown") {
-              e.preventDefault();
-              setActive((i) => Math.min(rows.length - 1, i + 1));
-            }
-            if (e.key === "ArrowUp") {
-              e.preventDefault();
-              setActive((i) => Math.max(0, i - 1));
-            }
-            if (e.key === "Enter" && rows[active]) go(rows[active].href);
-          }}
-        />
-        <ul className="max-h-[50dvh] overflow-y-auto p-2 sm:max-h-80">
-          {rows.map((a, i) => (
-            <li key={a.href}>
-              <button
-                type="button"
-                className={`flex min-h-12 w-full items-center justify-between rounded-[6px] px-3 py-2 text-left text-sm ${
-                  i === active ? "bg-bas-card" : "hover:bg-bas-card"
-                }`}
-                onClick={() => go(a.href)}
-              >
-                <span className="text-bas-heading">{a.label}</span>
-                <span className="text-xs text-bas-muted">{a.hint}</span>
-              </button>
-            </li>
-          ))}
+    <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-start sm:px-4 sm:pt-[12vh]">
+      <button type="button" className="absolute inset-0 bg-bas-overlay" aria-label="Close search" onClick={onClose} />
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Search"
+        className="relative z-10 w-full max-w-xl overflow-hidden rounded-t-[16px] border border-bas-hairline bg-bas-surface-soft shadow-2xl sm:rounded-[12px]"
+      >
+        <label className="flex items-center gap-3 border-b border-bas-hairline px-4">
+          <IconSearch className="h-5 w-5 shrink-0 text-bas-muted" />
+          <input
+            ref={input}
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Search pages and actions"
+            className="h-14 min-w-0 flex-1 bg-transparent text-base text-bas-heading outline-none placeholder:text-bas-muted sm:h-12 sm:text-sm"
+            onKeyDown={(e) => {
+              if (e.key === "Escape") onClose();
+              if (e.key === "ArrowDown") {
+                e.preventDefault();
+                setActive((i) => Math.min(rows.length - 1, i + 1));
+              }
+              if (e.key === "ArrowUp") {
+                e.preventDefault();
+                setActive((i) => Math.max(0, i - 1));
+              }
+              if (e.key === "Enter" && rows[active]) go(rows[active].href);
+            }}
+          />
+          <Kbd>esc</Kbd>
+        </label>
+        <ul className="max-h-[50dvh] overflow-y-auto p-2 sm:max-h-[min(24rem,50dvh)]">
+          {rows.map((a, i) => {
+            const showGroup = a.group !== lastGroup;
+            lastGroup = a.group;
+            return (
+              <li key={a.href}>
+                {showGroup ? (
+                  <p className="px-3 pb-1 pt-2 text-[10px] uppercase tracking-[0.16em] text-bas-muted first:pt-1">
+                    {a.group}
+                  </p>
+                ) : null}
+                <button
+                  type="button"
+                  className={`flex min-h-11 w-full items-center justify-between gap-3 rounded-[8px] px-3 py-2 text-left text-sm ${
+                    i === active ? "bg-bas-field text-bas-heading" : "text-bas-body hover:bg-bas-elevated"
+                  }`}
+                  onMouseEnter={() => setActive(i)}
+                  onClick={() => go(a.href)}
+                >
+                  <span className="truncate font-medium">{mark(a.label, q.trim())}</span>
+                  <span className="shrink-0 text-xs text-bas-muted">{mark(a.hint, q.trim())}</span>
+                </button>
+              </li>
+            );
+          })}
           {rows.length === 0 ? (
-            <li className="px-3 py-4 text-sm text-bas-muted">No matches</li>
+            <li className="px-3 py-8 text-center text-sm text-bas-muted">
+              No matches for “{q.trim()}”
+            </li>
           ) : null}
         </ul>
+        <div className="hidden items-center gap-4 border-t border-bas-hairline px-4 py-2 text-[11px] text-bas-muted sm:flex">
+          <span className="flex items-center gap-1.5">
+            <Kbd>↑</Kbd>
+            <Kbd>↓</Kbd>
+            Move
+          </span>
+          <span className="flex items-center gap-1.5">
+            <Kbd>↵</Kbd>
+            Open
+          </span>
+          <span className="ml-auto flex items-center gap-1.5">
+            <Kbd>/</Kbd>
+            Open
+          </span>
+        </div>
       </div>
-      <button type="button" className="absolute inset-0 -z-10" aria-label="Close" onClick={onClose} />
     </div>
   );
 }

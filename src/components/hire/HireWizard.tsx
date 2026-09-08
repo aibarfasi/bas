@@ -5,15 +5,16 @@ import { useRouter } from "next/navigation";
 import { useAccount, useSignTypedData } from "wagmi";
 import { Button } from "@/components/ui/Button";
 import { WalletButton } from "@/components/wallet/WalletButton";
-import { CategoryBadge, LiveBadge } from "@/components/ui/Badge";
 import type { MarketplaceAgent } from "@/lib/agents/types";
-import { buildSession, grantTypedData } from "@/lib/altana/sessions";
+import { buildSession, grantTypedData, makeEvent } from "@/lib/altana/sessions";
+import { grantCommitment } from "@/lib/altana/hash";
 import { useHireStore } from "@/lib/hire/store";
 import { hireKind } from "@/lib/hire/kind";
 import { hireBrief } from "@/lib/hire/brief";
-import { agentPath, formatUsd, publishedX402, shortAddr } from "@/lib/format";
+import { agentPath, canActivate, chainName, formatUsd, publishedX402, shortAddr } from "@/lib/format";
 import { categoryHirePath } from "@/lib/categories";
 import { PANCAKE_ALLOWLIST } from "@/lib/pancake/allowlist";
+import { paymentTypedData } from "@/lib/x402/typed";
 
 const STEPS = ["Wallet", "Session", "Pay", "Work"] as const;
 
@@ -46,7 +47,7 @@ export function HireWizard({ agent }: { agent: MarketplaceAgent }) {
     };
   }, [agent, brief.lockCap, cap, hours]);
 
-  if (!agent.hireable && !x402Url) {
+  if (!canActivate(agent)) {
     return (
       <div>
         <p className="text-xs text-bas-muted">Hire</p>
@@ -71,6 +72,7 @@ export function HireWizard({ agent }: { agent: MarketplaceAgent }) {
     try {
       const demo = !isConnected || !address;
       let grantSig: string | null = null;
+      let paySig: string | null = null;
       const draft = buildSession({
         agentId: agent.id,
         agentName: agent.name,
@@ -92,7 +94,31 @@ export function HireWizard({ agent }: { agent: MarketplaceAgent }) {
           },
         });
         draft.grantSig = grantSig;
+        const pay = paymentTypedData({
+          chainId: chainId ?? agent.chainId,
+          amountUsd: String(agent.priceUsd ?? 0),
+          resource: x402Url ?? `/api/hire/faces/${hireKind(agent)}/x402`,
+          payTo: agent.owner,
+          nonce: draft.id,
+        });
+        paySig = await signTypedDataAsync({
+          domain: pay.domain,
+          types: pay.types,
+          primaryType: pay.primaryType,
+          message: pay.message,
+        });
       }
+      draft.grantHash = grantCommitment(draft);
+      draft.events = [
+        makeEvent(
+          "grant",
+          "Altana grant",
+          draft.grantSig ? "EIP-712 session grant signed" : "Demo grant — no wallet",
+        ),
+        ...policy.allowlist.map((a) =>
+          makeEvent("allowlist", a.label, `Agent may call ${a.address}`, { target: a.address }),
+        ),
+      ];
 
       const ledger = await fetch("/api/altana/receipts", {
         method: "POST",
@@ -109,7 +135,9 @@ export function HireWizard({ agent }: { agent: MarketplaceAgent }) {
           expiry: draft.expiry,
           allowlist: draft.allowlist,
           grantSig: draft.grantSig,
+          grantHash: draft.grantHash,
           demo: draft.demo,
+          chainId: draft.chainId,
         }),
       }).then((r) => r.json());
       draft.ledgerId = ledger.receipt?.id ?? null;
@@ -118,15 +146,22 @@ export function HireWizard({ agent }: { agent: MarketplaceAgent }) {
       let paid: {
         receipt?: { id?: string };
         result?: { title?: string; summary?: string; outputs?: { label: string; value: string }[] };
+        quote?: { pair?: string; minOut?: string; amountOut?: string; router?: string };
         error?: string;
         ok?: boolean;
         status?: number;
       };
+      const payment = paySig ?? (demo ? "demo" : grantSig);
       if (!agent.hireable && x402Url) {
         paid = await fetch("/api/hire/x402-try", {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ endpoint: x402Url, payment: grantSig ?? "demo" }),
+          body: JSON.stringify({
+            endpoint: x402Url,
+            payment,
+            recipient: address ?? "hirer",
+            kind: hireKind(agent),
+          }),
         }).then((r) => r.json());
         if (!paid.ok && paid.status !== 200) {
           throw new Error(
@@ -139,12 +174,37 @@ export function HireWizard({ agent }: { agent: MarketplaceAgent }) {
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({
-            payment: grantSig ?? "demo",
+            payment,
             recipient: address ?? "hirer",
           }),
         }).then((r) => r.json());
       }
       draft.paymentId = paid.receipt?.id ?? null;
+      draft.events = [
+        ...draft.events,
+        makeEvent(
+          "pay",
+          "x402 payment",
+          paySig ? "Signed BAS x402 / B402 authorization" : "Demo payment — judge path",
+        ),
+      ];
+      if (paid.quote?.pair) {
+        draft.events.push(
+          makeEvent(
+            "quote",
+            "Pancake quote",
+            `${paid.quote.pair} out ${paid.quote.amountOut} minOut ${paid.quote.minOut} recipient=hirer`,
+            { target: paid.quote.router },
+          ),
+        );
+      }
+      draft.events.push(
+        makeEvent(
+          "deliver",
+          "Work delivered",
+          "Output recipient is you. Agent never held funds.",
+        ),
+      );
       upsertSession(draft);
 
       const result = paid.result as
@@ -191,12 +251,7 @@ export function HireWizard({ agent }: { agent: MarketplaceAgent }) {
 
   return (
     <div>
-      <p className="text-xs text-bas-muted">{brief.eyebrow}</p>
-      <div className="mt-2 flex flex-wrap items-center gap-2">
-        <CategoryBadge cat={agent.category} />
-        <LiveBadge live={agent.live} />
-      </div>
-      <h1 className="mt-3 text-3xl font-semibold">Hire {agent.name}</h1>
+      <h1 className="text-3xl font-semibold">Hire {agent.name}</h1>
       <p className="mt-3 max-w-2xl text-sm leading-6 text-bas-muted">{brief.lead}</p>
       {externalX402 ? (
         <Button href={categoryHirePath(agent.category)} variant="secondary" className="mt-3">
@@ -238,15 +293,24 @@ export function HireWizard({ agent }: { agent: MarketplaceAgent }) {
                   A connected wallet signs the Altana session (EIP-712). Judges can
                   continue without a wallet — this journey must not dead-end.
                 </p>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  <WalletButton light />
-                  <Button variant="secondary" onClick={() => setStep(1)}>
-                    Continue {isConnected ? "with wallet" : "as demo"}
-                  </Button>
+                <div className="mt-4 grid gap-3 lg:grid-cols-2">
+                  <WalletButton layout="card" preferredChainId={agent.chainId} />
+                  <div className="flex flex-col rounded-[12px] border border-bas-hairline bg-bas-surface-soft p-5">
+                    <h3 className="text-base font-semibold text-bas-heading">Judge path</h3>
+                    <p className="mt-2 flex-1 text-sm leading-6 text-bas-muted">
+                      No extension, no seed phrase. Demo grant, demo x402, same session
+                      page and revoke.
+                    </p>
+                    <Button className="mt-4" variant="secondary" onClick={() => setStep(1)}>
+                      Continue {isConnected ? "with wallet" : "as demo"}
+                    </Button>
+                    {isConnected && chainId && chainId !== agent.chainId ? (
+                      <p className="mt-3 text-xs text-bas-down">
+                        Switch to {chainName(agent.chainId)} in the wallet card before you sign.
+                      </p>
+                    ) : null}
+                  </div>
                 </div>
-                {isConnected ? (
-                  <p className="num mt-3 text-xs text-bas-muted">{shortAddr(address)}</p>
-                ) : null}
               </div>
             ) : null}
 
@@ -264,7 +328,7 @@ export function HireWizard({ agent }: { agent: MarketplaceAgent }) {
                     value={brief.lockCap ? "0" : cap}
                     disabled={brief.lockCap}
                     onChange={(e) => setCap(e.target.value)}
-                    className="num mt-1 h-10 w-full rounded-[8px] border border-bas-hairline-light px-3 disabled:bg-bas-surface-soft"
+                    className="num mt-1 h-10 w-full rounded-[8px] border border-bas-hairline bg-bas-canvas px-3 text-bas-heading disabled:bg-bas-surface-soft"
                   />
                 </label>
                 <label className="mt-3 block text-xs text-bas-muted">
@@ -275,7 +339,7 @@ export function HireWizard({ agent }: { agent: MarketplaceAgent }) {
                     max={168}
                     value={hours}
                     onChange={(e) => setHours(Number(e.target.value))}
-                    className="num mt-1 h-10 w-full rounded-[8px] border border-bas-hairline-light px-3"
+                    className="num mt-1 h-10 w-full rounded-[8px] border border-bas-hairline bg-bas-canvas px-3 text-bas-heading"
                   />
                 </label>
                 <ul className="mt-4 space-y-1 text-sm">
@@ -300,8 +364,11 @@ export function HireWizard({ agent }: { agent: MarketplaceAgent }) {
               <div>
                 <h2 className="font-semibold">Pay with x402</h2>
                 <p className="mt-2 text-sm text-bas-muted">
-                  Facilitator: Binance x402 / B402. Price {formatUsd(agent.priceUsd)}. Payment
-                  settles before work.
+                  Facilitator: Binance x402 / B402. Price {formatUsd(agent.priceUsd)}. A connected
+                  wallet signs an x402 authorization; judges without a wallet continue as demo.
+                  {x402Url && !agent.hireable
+                    ? " This call hits the agent's published x402 face, not a BAS seller."
+                    : ""}
                 </p>
                 <dl className="mt-4 space-y-2 text-sm">
                   <div className="flex justify-between">

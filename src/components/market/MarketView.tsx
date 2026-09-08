@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/Button";
 import { FILTERS, catQuery } from "@/lib/categories";
 import { useCompareStore } from "@/lib/compare/store";
 import type { AgentsResponse, CategoryFilter, MarketplaceAgent } from "@/lib/agents/types";
-import { agentPath, formatPct, formatUsd, hirePath, shortAddr } from "@/lib/format";
+import { agentPath, canActivate, formatPct, formatUsd, hireCta, hirePath, shortAddr } from "@/lib/format";
+import { WatchToggle } from "@/components/watch/WatchToggle";
 
 function pnlTone(n: number | null) {
   if (n == null) return "muted" as const;
@@ -32,7 +33,7 @@ export function MarketView({
   const compare = useCompareStore();
 
   const filtered = useMemo(() => {
-    return data.agents.filter((a) => {
+    const rows = data.agents.filter((a) => {
       if (cat !== "all" && a.category !== cat) return false;
       if (!showUncat && a.category === "uncategorized") return false;
       if (liveOnly && a.live !== true) return false;
@@ -42,6 +43,13 @@ export function MarketView({
       }
       return true;
     });
+    if (cat !== "all") return rows;
+    const pin = ["rebalance", "grid", "health", "yield"] as const;
+    const pinned = pin
+      .map((c) => rows.find((a) => a.featured && a.hireable && a.category === c))
+      .filter((a): a is MarketplaceAgent => Boolean(a));
+    const rest = rows.filter((a) => !pinned.some((p) => p.id === a.id));
+    return [...pinned, ...rest];
   }, [data.agents, cat, q, liveOnly, showUncat]);
 
   const uncatCount = data.agents.filter((a) => a.category === "uncategorized").length;
@@ -60,8 +68,8 @@ export function MarketView({
           <h1 className="text-2xl font-semibold text-bas-heading">Market</h1>
           <p className="mt-1 text-sm text-bas-muted">
             <span className="num text-bas-primary">{data.stats.totalOnBsc.toLocaleString()}</span>{" "}
-            agents indexed on 8004scan. Showing {data.stats.scanned} with{" "}
-            {data.stats.featured} hire-ready BAS sellers. Uncategorized agents stay visible.
+            agents indexed on 8004scan. Showing {data.stats.scanned} with four
+            hire-ready BAS sellers — one per brief category. Uncategorized agents stay visible.
           </p>
         </div>
         <div className="flex flex-wrap gap-2 text-xs text-bas-muted">
@@ -202,9 +210,10 @@ export function MarketView({
                     >
                       {compare.has(a.id) ? "Added" : "Compare"}
                     </button>
-                    {a.hireable ? (
+                    <WatchToggle agent={a} />
+                    {canActivate(a) ? (
                       <Button href={hirePath(a.chainId, a.tokenId)} className="h-10 px-4">
-                        Hire
+                        {hireCta(a)}
                       </Button>
                     ) : (
                       <Button href={agentPath(a.chainId, a.tokenId)} variant="secondary" className="h-10 px-4">
@@ -241,7 +250,7 @@ export function MarketView({
               <Button variant="secondary" onClick={() => compare.clear()}>
                 Clear
               </Button>
-              <Button href="/compare">Compare</Button>
+              <Button href={compare.ids.length ? `/compare?ids=${encodeURIComponent(compare.ids.join(","))}` : "/compare"}>Compare</Button>
             </div>
           </div>
         </div>
@@ -322,11 +331,12 @@ function AgentMobileCard({ agent: a }: { agent: MarketplaceAgent }) {
         >
           {compare.has(a.id) ? "Added" : "Compare"}
         </button>
+        <WatchToggle agent={a} />
         <Button
-          href={a.hireable ? hirePath(a.chainId, a.tokenId) : agentPath(a.chainId, a.tokenId)}
+          href={canActivate(a) ? hirePath(a.chainId, a.tokenId) : agentPath(a.chainId, a.tokenId)}
           className="flex-1"
         >
-          {a.hireable ? "Hire" : "View"}
+          {canActivate(a) ? hireCta(a) : "View"}
         </Button>
       </div>
     </div>

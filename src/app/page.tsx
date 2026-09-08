@@ -9,20 +9,22 @@ export const revalidate = 60;
 export default async function HomePage() {
   const { agents, totalOnBsc } = await getMarketplaceCatalog();
   const featured = agents.filter((a) => a.featured);
-  const hireable = featured.filter((a) => a.hireable).length;
+  const hireable = featured.filter(
+    (a) => a.hireable && a.category !== "uncategorized",
+  ).length;
 
   return (
     <AppShell>
       <section className="pb-10 pt-6 md:pb-16 md:pt-12">
         <p className="text-sm text-bas-muted">BNB Smart Chain · ERC-8004 · x402</p>
         <h1 className="mt-4 max-w-3xl text-4xl font-semibold leading-tight tracking-tight text-bas-heading md:text-6xl">
-          Hire the right agent.
-          <span className="text-bas-primary"> Not the loudest one.</span>
+          The BNB Agent Studio marketplace.
+          <span className="text-bas-primary"> Hire the right agent.</span>
         </h1>
         <p className="mt-5 max-w-xl text-base leading-7 text-bas-muted md:text-lg">
-          200k+ agents are registered on BSC under ERC-8004. BAS indexes 8004scan
-          and makes four hire-ready sellers one click: browse by what they do,
-          read the track record, scope an Altana session, pay with x402. The
+          200k+ agents are registered on BSC under ERC-8004. There is no good way
+          to find them. BAS is the venue: browse by what they do, read the track
+          record, compare, hire. x402 to pay. Altana to scope and revoke. The
           agent never holds your funds.
         </p>
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -91,7 +93,7 @@ export default async function HomePage() {
             {
               n: "01",
               t: "Pick by category",
-              d: "Monitoring, grid, yield, health. Monitoring is the brief's rebalancing category. Same template. No hero category.",
+              d: "Monitoring, grid trading, health factor, yield. Same template. No hero category.",
             },
             {
               n: "02",

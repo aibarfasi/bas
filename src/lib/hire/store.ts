@@ -2,7 +2,7 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { HiredSession } from "@/lib/altana/sessions";
+import { makeEvent, normalizeSession, type HiredSession } from "@/lib/altana/sessions";
 import type { HireJob } from "@/lib/hire/types";
 
 export type { HireJob };
@@ -23,21 +23,30 @@ export const useHireStore = create<HireState>()(
       sessions: [],
       jobs: [],
       upsertSession: (s) =>
-        set({ sessions: [s, ...get().sessions.filter((x) => x.id !== s.id)] }),
+        set({
+          sessions: [normalizeSession(s), ...get().sessions.filter((x) => x.id !== s.id)],
+        }),
       revokeSession: (id, sig) =>
         set({
           sessions: get().sessions.map((s) =>
             s.id === id
-              ? {
+              ? normalizeSession({
                   ...s,
                   revokedAt: Math.floor(Date.now() / 1000),
                   revokeSig: sig ?? s.revokeSig,
-                }
+                  events: [
+                    ...s.events,
+                    makeEvent("revoke", "Session revoked", sig ? "Signed kill switch" : "Demo revoke"),
+                  ],
+                })
               : s,
           ),
         }),
       addJob: (j) => set({ jobs: [j, ...get().jobs.filter((x) => x.id !== j.id)] }),
-      getSession: (id) => get().sessions.find((s) => s.id === id),
+      getSession: (id) => {
+        const found = get().sessions.find((s) => s.id === id);
+        return found ? normalizeSession(found) : undefined;
+      },
       getJobBySession: (sessionId) =>
         get().jobs.find((j) => j.sessionId === sessionId),
     }),

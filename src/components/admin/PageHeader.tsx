@@ -16,7 +16,7 @@ export function PageHeader({
         {desc ? <p className="mt-1 max-w-2xl text-sm leading-6 text-bas-muted">{desc}</p> : null}
       </div>
       {actions ? (
-        <div className="flex w-full flex-col gap-2 sm:flex-row sm:flex-wrap lg:w-auto [&>a]:w-full [&>a]:sm:w-auto [&>button]:w-full [&>button]:sm:w-auto">
+        <div className="flex w-full flex-col gap-1.5 sm:flex-row sm:flex-wrap lg:w-auto [&>a]:w-full [&>a]:sm:w-auto [&>button]:w-full [&>button]:sm:w-auto">
           {actions}
         </div>
       ) : null}

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type { HiredSession } from "@/lib/altana/sessions";
 import type { HireJob } from "@/lib/hire/types";
 import {
+  hydrateHires,
   listHireJobs,
   listHireSessions,
   revokeHireSession,
@@ -10,6 +11,7 @@ import {
 } from "@/lib/ops/hires";
 
 export async function GET() {
+  await hydrateHires();
   return NextResponse.json({
     sessions: listHireSessions(),
     jobs: listHireJobs(),
@@ -17,6 +19,7 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  await hydrateHires();
   const body = (await req.json().catch(() => ({}))) as {
     session?: HiredSession;
     job?: HireJob;

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { CompareToggle } from "@/components/agent/CompareToggle";
+import { WatchToggle } from "@/components/watch/WatchToggle";
 import { CategoryBadge, FeaturedBadge, LiveBadge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Metric } from "@/components/ui/Metric";
@@ -9,11 +10,15 @@ import type { MarketplaceAgent } from "@/lib/agents/types";
 import { agentStory, categoryHirePath } from "@/lib/categories";
 import {
   altanaExplorer,
+  canActivate,
   chainName,
   explorerAddress,
+  explorerTx,
   formatPct,
   formatUsd,
+  hireCta,
   hirePath,
+  isPublishedTx,
   publishedX402,
   scanAgent,
   shortAddr,
@@ -65,13 +70,10 @@ export function AgentDetailView({ agent, compact = false }: Props) {
         {!compact ? (
           <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
             <CompareToggle id={agent.id} />
-            {agent.hireable ? (
+            <WatchToggle agent={agent} />
+            {canActivate(agent) ? (
               <Button href={hirePath(agent.chainId, agent.tokenId)} className="h-10">
-                Hire {formatUsd(agent.priceUsd)}
-              </Button>
-            ) : publishedX402(agent) ? (
-              <Button href={hirePath(agent.chainId, agent.tokenId)} className="h-10">
-                Try x402
+                {agent.hireable ? `Hire ${formatUsd(agent.priceUsd)}` : hireCta(agent)}
               </Button>
             ) : (
               <Button href={categoryHirePath(agent.category)} className="h-10">
@@ -124,8 +126,14 @@ export function AgentDetailView({ agent, compact = false }: Props) {
               href={agent.agentWallet ? explorerAddress(agent.chainId, agent.agentWallet) : undefined}
             />
             <Row k="8004scan" v="Open record" href={scanAgent(agent.chainId, agent.tokenId)} />
+            {isPublishedTx(agent.txHash) ? (
+              <Row k="Registry tx" v={shortAddr(agent.txHash, 6)} href={explorerTx(agent.chainId, agent.txHash as string)} />
+            ) : null}
             <Row k="Registered" v={timeAgo(agent.createdAt)} />
           </dl>
+          <Link href="/claim" className="mt-3 inline-block text-xs text-bas-primary">
+            Claim this listing
+          </Link>
         </section>
       </div>
 
@@ -196,8 +204,13 @@ export function AgentDetailView({ agent, compact = false }: Props) {
 
         <section className="rounded-[12px] bg-bas-card p-5">
           <h2 className="text-sm font-semibold text-bas-heading">
-            Feedback ({agent.feedbackCount || agent.feedback.length})
+            ERC-8004 feedback ({agent.feedbackCount || agent.feedback.length})
           </h2>
+          <p className="mt-1 text-xs text-bas-muted">
+            {agent.source === "8004scan"
+              ? "Only signals indexed by 8004scan. Win rate and PnL stay blank unless the operator published them."
+              : "Operator-published comments plus any on-chain scores on this seller."}
+          </p>
           {agent.feedback.length ? (
             <ul className="mt-3 space-y-3">
               {agent.feedback.map((f, i) => (
@@ -214,20 +227,25 @@ export function AgentDetailView({ agent, compact = false }: Props) {
               ))}
             </ul>
           ) : (
-            <p className="mt-3 text-sm text-bas-muted">
-              No operator-published feedback yet.
-              {agent.averageScore
-                ? ` Indexed score ${agent.averageScore} from ${agent.feedbackCount} signals.`
-                : ""}
-            </p>
+            <>
+              <p className="mt-3 text-sm text-bas-muted">
+                No on-chain ERC-8004 feedback published yet.
+                {agent.averageScore
+                  ? ` Indexed score ${agent.averageScore} from ${agent.feedbackCount} signals.`
+                  : ""}
+              </p>
+              <Button href="/claim" variant="secondary" className="mt-3">
+                Claim this listing
+              </Button>
+            </>
           )}
         </section>
       </div>
 
-      {!compact && (agent.hireable || publishedX402(agent)) ? (
+      {!compact && canActivate(agent) ? (
         <div className="sticky bottom-0 -mx-4 mt-8 border-t border-bas-hairline bg-bas-canvas px-4 py-3 md:hidden">
           <Button href={hirePath(agent.chainId, agent.tokenId)} className="w-full">
-            {agent.hireable ? `Hire ${formatUsd(agent.priceUsd)}` : "Try x402"}
+            {agent.hireable ? `Hire ${formatUsd(agent.priceUsd)}` : hireCta(agent)}
           </Button>
         </div>
       ) : !compact ? (
@@ -244,7 +262,12 @@ export function AgentDetailView({ agent, compact = false }: Props) {
 function publicStats(agent: MarketplaceAgent) {
   const pnl = agent.metrics.pnlPct;
   const items: { label: string; value: string; tone?: "up" | "down" | "muted" | "default" }[] = [];
-  if (agent.totalScore) items.push({ label: "Score", value: agent.totalScore.toFixed(1) });
+  if (agent.totalScore) {
+    items.push({
+      label: agent.source === "8004scan" ? "8004scan score" : "Score",
+      value: agent.totalScore.toFixed(1),
+    });
+  }
   if (agent.averageScore) items.push({ label: "Avg feedback", value: String(agent.averageScore) });
   if (agent.feedbackCount) {
     items.push({ label: "Feedback", value: String(agent.feedbackCount) });

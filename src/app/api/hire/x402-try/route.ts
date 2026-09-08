@@ -1,4 +1,7 @@
 import { NextResponse } from "next/server";
+import { hydrateFromSql } from "@/lib/admin/store";
+import { putPayment } from "@/lib/x402/receipts";
+import { isSignedPayment } from "@/lib/x402/typed";
 
 function allowed(url: string) {
   try {
@@ -10,9 +13,12 @@ function allowed(url: string) {
 }
 
 export async function POST(req: Request) {
+  await hydrateFromSql();
   const body = (await req.json().catch(() => ({}))) as {
     endpoint?: string;
     payment?: string;
+    recipient?: string;
+    kind?: string;
   };
   if (!body.endpoint || !allowed(body.endpoint)) {
     return NextResponse.json({ error: "https x402 endpoint required" }, { status: 400 });
@@ -40,15 +46,33 @@ export async function POST(req: Request) {
       method: "POST",
       signal: ctrl.signal,
       headers: { accept: "application/json", "content-type": "application/json" },
-      body: JSON.stringify({ payment: body.payment }),
+      body: JSON.stringify({ payment: body.payment, recipient: body.recipient }),
       redirect: "manual",
     });
     const paidText = await paid.text();
+    const result = safeJson(paidText);
+    const signed = isSignedPayment(body.payment);
+    const receipt = putPayment({
+      id: `x402_scan_${Date.now().toString(36)}`,
+      kind: body.kind ?? "8004scan",
+      network: "bsc-testnet",
+      facilitator: "Binance x402 / B402",
+      scheme: "exact",
+      asset: "USDT",
+      amountUsd: 0,
+      payment: body.payment,
+      recipient: body.recipient ?? "hirer",
+      paidAt: Date.now(),
+      demo: !signed,
+      settled: paid.ok,
+      resource: body.endpoint,
+    });
     return NextResponse.json({
       ok: paid.ok,
       status: paid.status,
       face: probeBody,
-      result: safeJson(paidText),
+      result,
+      receipt,
     });
   } catch (e) {
     return NextResponse.json(

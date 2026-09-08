@@ -16,7 +16,7 @@ export default async function HirePage({
   if (!agent) notFound();
 
   return (
-    <AppShell light>
+    <AppShell>
       <HireWizard agent={agent} />
     </AppShell>
   );

@@ -16,26 +16,26 @@ export const CATEGORY_META: Record<
     job: "Places and manages automated grid orders inside a set range.",
     pancake: "Smart Router fills. Output recipient is you. Agent never holds inventory.",
   },
-  yield: {
-    label: "Yield optimisation",
-    short: "Yield",
-    job: "Routes liquidity to the highest available APR across farms and fees.",
-    pancake: "CAKE + fee yield across V2/V3 and MasterChef. Research first, then move.",
-  },
   health: {
     label: "Health factor",
     short: "Health",
     job: "Protects lending positions from liquidation before the health factor breaks.",
     pancake: "Read-only scan of Venus/Lista-style debt. Alerts fire before you get liquidated.",
   },
+  yield: {
+    label: "Yield",
+    short: "Yield",
+    job: "Routes liquidity to the highest available APR across farms and fees.",
+    pancake: "CAKE + fee yield across V2/V3 and MasterChef. Research first, then move.",
+  },
 };
 
 export const FILTERS: { id: CategoryFilter; label: string }[] = [
   { id: "all", label: "All" },
-  { id: "rebalance", label: "Monitoring / rebalance" },
+  { id: "rebalance", label: "Monitoring" },
   { id: "grid", label: "Grid trading" },
-  { id: "yield", label: "Yield" },
   { id: "health", label: "Health factor" },
+  { id: "yield", label: "Yield" },
 ];
 
 export function categoryLabel(cat: Category) {

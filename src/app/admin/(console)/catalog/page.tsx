@@ -4,18 +4,31 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { Confirm } from "@/components/admin/Confirm";
 import { CopyText } from "@/components/admin/CopyText";
+import { FlagBtn } from "@/components/admin/FlagBtn";
+import { AdminSelect } from "@/components/admin/AdminSelect";
 import { PageHeader } from "@/components/admin/PageHeader";
-import { Chip, ChipRow, EmptyState, FieldInput, ResponsiveTable, Skeleton } from "@/components/admin/ResponsiveTable";
+import { Chip, ChipRow, EmptyState, ResponsiveTable, SearchField, Skeleton, StatusBanner } from "@/components/admin/ResponsiveTable";
 import { useToast } from "@/components/admin/Toast";
-import { CategoryBadge, LiveBadge } from "@/components/ui/Badge";
+import { FeaturedBadge, LiveBadge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { adminFetch } from "@/lib/admin/client";
 import { downloadCsv } from "@/lib/admin/csv";
-import { CATEGORIES, type Category, type MarketplaceAgent } from "@/lib/agents/types";
+import { CATEGORIES, type MarketplaceAgent } from "@/lib/agents/types";
 import { categoryLabel } from "@/lib/categories";
-import { agentPath, shortAddr } from "@/lib/format";
+import { agentPath, formatUsd, shortAddr } from "@/lib/format";
 
-type Filter = "all" | "featured" | "hireable" | "uncategorized" | "live";
+type Filter = "all" | "featured" | "hireable" | "live" | "uncategorized" | "custom";
+
+function AgentMark({ agent }: { agent: MarketplaceAgent }) {
+  if (agent.imageUrl) {
+    return <img src={agent.imageUrl} alt="" className="h-9 w-9 shrink-0 rounded-[8px] object-cover" />;
+  }
+  return (
+    <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[8px] bg-bas-elevated text-[11px] font-semibold text-bas-heading">
+      {agent.name.slice(0, 2).toUpperCase()}
+    </span>
+  );
+}
 
 export default function AdminCatalogPage() {
   const toast = useToast();
@@ -24,8 +37,9 @@ export default function AdminCatalogPage() {
   const [filter, setFilter] = useState<Filter>("all");
   const [selected, setSelected] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [confirmHide, setConfirmHide] = useState(false);
+  const [confirmHide, setConfirmHide] = useState<null | "bulk" | string>(null);
   const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState<string | null>(null);
 
   async function load() {
     const data = await adminFetch<{ agents: MarketplaceAgent[] }>("/api/admin/catalog");
@@ -40,37 +54,67 @@ export default function AdminCatalogPage() {
     });
   }, []);
 
+  const counts = useMemo(() => {
+    return {
+      all: agents.length,
+      featured: agents.filter((a) => a.featured).length,
+      hireable: agents.filter((a) => a.hireable).length,
+      live: agents.filter((a) => a.live === true).length,
+      uncategorized: agents.filter((a) => a.category === "uncategorized").length,
+      custom: agents.filter((a) => a.source === "featured").length,
+    };
+  }, [agents]);
+
   const rows = useMemo(() => {
+    const n = q.trim().toLowerCase();
     return agents.filter((a) => {
       if (filter === "featured" && !a.featured) return false;
       if (filter === "hireable" && !a.hireable) return false;
       if (filter === "uncategorized" && a.category !== "uncategorized") return false;
       if (filter === "live" && a.live !== true) return false;
-      if (!q) return true;
-      const n = q.toLowerCase();
-      return `${a.name} ${a.tokenId} ${a.owner} ${a.category}`.toLowerCase().includes(n);
+      if (filter === "custom" && a.source !== "featured") return false;
+      if (!n) return true;
+      return `${a.name} ${a.tokenId} ${a.id} ${a.owner} ${a.category} ${a.source}`.toLowerCase().includes(n);
     });
   }, [agents, q, filter]);
 
-  async function patch(id: string, body: Record<string, unknown>) {
-    await adminFetch("/api/admin/catalog", {
-      method: "PATCH",
-      body: JSON.stringify({ id, ...body }),
-    });
-    toast("ok", "Catalog updated");
-    await load();
+  async function patch(id: string, body: Record<string, unknown>, ok = "Catalog updated") {
+    setBusy(id);
+    try {
+      await adminFetch("/api/admin/catalog", {
+        method: "PATCH",
+        body: JSON.stringify({ id, ...body }),
+      });
+      toast("ok", ok);
+      await load();
+    } catch (e) {
+      toast("err", e instanceof Error ? e.message : "Update failed");
+    } finally {
+      setBusy(null);
+    }
   }
 
   async function bulk(body: Record<string, unknown>) {
     if (!selected.length) return;
-    await adminFetch("/api/admin/catalog", {
-      method: "PATCH",
-      body: JSON.stringify({ ids: selected, ...body }),
-    });
-    toast("ok", `Updated ${selected.length} agents`);
-    setSelected([]);
-    setConfirmHide(false);
-    await load();
+    setBusy("bulk");
+    try {
+      await adminFetch("/api/admin/catalog", {
+        method: "PATCH",
+        body: JSON.stringify({ ids: selected, ...body }),
+      });
+      toast("ok", `Updated ${selected.length} agents`);
+      setSelected([]);
+      setConfirmHide(null);
+      await load();
+    } catch (e) {
+      toast("err", e instanceof Error ? e.message : "Update failed");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  function toggleSelect(id: string) {
+    setSelected((cur) => (cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]));
   }
 
   function toggleAll() {
@@ -78,70 +122,120 @@ export default function AdminCatalogPage() {
     else setSelected(rows.map((a) => a.id));
   }
 
+  const filters: { id: Filter; label: string }[] = [
+    { id: "all", label: "All" },
+    { id: "featured", label: "Featured" },
+    { id: "hireable", label: "Hireable" },
+    { id: "live", label: "Live" },
+    { id: "uncategorized", label: "Uncategorized" },
+    { id: "custom", label: "BAS" },
+  ];
+
+  const hideTarget = confirmHide && confirmHide !== "bulk" ? agents.find((a) => a.id === confirmHide) : null;
+
   return (
     <div>
       <PageHeader
         title="Catalog"
         desc="8004scan plus BAS sellers. Feature, recategorize, or hide without waiting on a deploy."
         actions={
-          <Button
-            variant="secondary"
-            onClick={() =>
-              downloadCsv(
-                "bas-catalog.csv",
-                rows.map((a) => ({
-                  id: a.id,
-                  name: a.name,
-                  category: a.category,
-                  featured: a.featured,
-                  hireable: a.hireable,
-                  live: a.live,
-                  owner: a.owner,
-                  price: a.priceUsd,
-                })),
-              )
-            }
-          >
-            Export CSV
-          </Button>
+          <>
+            <Button href="/admin/agents/new" variant="secondary">
+              Add seller
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() =>
+                downloadCsv(
+                  "bas-catalog.csv",
+                  rows.map((a) => ({
+                    id: a.id,
+                    name: a.name,
+                    category: a.category,
+                    featured: a.featured,
+                    hireable: a.hireable,
+                    live: a.live,
+                    source: a.source,
+                    owner: a.owner,
+                    price: a.priceUsd,
+                  })),
+                )
+              }
+            >
+              Export CSV
+            </Button>
+          </>
         }
       />
-      <div className="sticky top-[calc(3.5rem+env(safe-area-inset-top))] z-10 -mx-3 mt-4 space-y-3 border-b border-bas-hairline bg-bas-canvas/95 px-3 py-3 backdrop-blur-md sm:-mx-4 sm:px-4 md:static md:mx-0 md:border-0 md:bg-transparent md:px-0 md:py-0 md:backdrop-blur-none">
-        <FieldInput value={q} onChange={setQ} placeholder="Search name, token, owner" />
+
+      <StatusBanner
+        tone={counts.uncategorized ? "warn" : "up"}
+        title={`${counts.all} listed · ${counts.live} live`}
+        body={`${counts.featured} featured · ${counts.uncategorized} uncategorized · ${counts.custom} BAS`}
+      />
+
+      <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        {(
+          [
+            [counts.all, "Total"],
+            [counts.featured, "Featured"],
+            [counts.hireable, "Hireable"],
+            [counts.live, "Live"],
+            [counts.uncategorized, "Uncategorized"],
+            [counts.custom, "BAS"],
+          ] as const
+        ).map(([n, l]) => (
+          <div key={l} className="rounded-[12px] border border-bas-hairline bg-bas-card px-3 py-3">
+            <div className="num text-xl font-semibold text-bas-primary">{n}</div>
+            <div className="mt-0.5 text-[11px] text-bas-muted">{l}</div>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-5 space-y-3">
+        <SearchField value={q} onChange={setQ} placeholder="Search name, token, owner" />
         <ChipRow>
-          {(["all", "featured", "hireable", "live", "uncategorized"] as const).map((f) => (
-            <Chip key={f} active={filter === f} onClick={() => setFilter(f)}>
-              {f}
+          {filters.map((f) => (
+            <Chip key={f.id} active={filter === f.id} onClick={() => setFilter(f.id)}>
+              {f.label}{" "}
+              <span className={`num ${filter === f.id ? "" : "text-bas-muted"}`}>{counts[f.id]}</span>
             </Chip>
           ))}
         </ChipRow>
       </div>
+
       {selected.length ? (
-        <div className="mt-3 flex flex-wrap items-center gap-3 text-sm">
-          <span className="num text-bas-muted">{selected.length} selected</span>
-          <button type="button" className="min-h-10 text-bas-primary" onClick={() => bulk({ featured: true })}>
-            Feature
-          </button>
-          <button type="button" className="min-h-10 text-bas-primary" onClick={() => bulk({ hireable: true })}>
-            Make hireable
-          </button>
-          <button type="button" className="min-h-10 text-bas-down" onClick={() => setConfirmHide(true)}>
-            Hide
-          </button>
+        <div className="mt-4 flex flex-wrap items-center gap-2 rounded-[12px] border border-bas-hairline bg-bas-card p-3">
+          <span className="text-sm text-bas-heading">
+            <span className="num font-semibold">{selected.length}</span> selected
+          </span>
+          <div className="flex flex-wrap gap-1.5 sm:ml-auto">
+            <Button size="sm" variant="secondary" disabled={busy === "bulk"} onClick={() => void bulk({ featured: true })}>
+              Feature
+            </Button>
+            <Button size="sm" variant="secondary" disabled={busy === "bulk"} onClick={() => void bulk({ hireable: true })}>
+              Make hireable
+            </Button>
+            <Button size="sm" variant="danger" disabled={busy === "bulk"} onClick={() => setConfirmHide("bulk")}>
+              Hide
+            </Button>
+          </div>
         </div>
       ) : null}
-      {error ? <p className="mt-3 text-sm text-bas-down">{error}</p> : null}
-      <p className="mt-3 text-xs text-bas-muted">
+
+      {error ? <p className="mt-4 text-sm text-bas-down">{error}</p> : null}
+      <p className="mt-4 text-xs text-bas-muted">
         Showing <span className="num">{rows.length}</span> of {agents.length}
         {rows.length ? (
           <>
             {" · "}
-            <button type="button" className="text-bas-primary" onClick={toggleAll}>
-              {selected.length === rows.length ? "Clear" : "Select all"}
-            </button>
+            <Button size="sm" variant="ghost" onClick={toggleAll}>
+              {selected.length === rows.length ? "Clear selection" : "Select all"}
+            </Button>
           </>
         ) : null}
       </p>
+
       {loading ? (
         <Skeleton rows={5} />
       ) : (
@@ -149,16 +243,16 @@ export default function AdminCatalogPage() {
           rows={rows}
           rowKey={(a) => a.id}
           leading={(a) => (
-            <input
-              type="checkbox"
-              className="h-4 w-4"
-              checked={selected.includes(a.id)}
-              onChange={() =>
-                setSelected((cur) =>
-                  cur.includes(a.id) ? cur.filter((id) => id !== a.id) : [...cur, a.id],
-                )
-              }
-            />
+            <div className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                className="h-4 w-4 accent-bas-primary"
+                checked={selected.includes(a.id)}
+                onChange={() => toggleSelect(a.id)}
+                aria-label={`Select ${a.name}`}
+              />
+              <AgentMark agent={a} />
+            </div>
           )}
           mobilePrimary={(a) => (
             <Link href={agentPath(a.chainId, a.tokenId)} className="hover:text-bas-primary">
@@ -167,33 +261,42 @@ export default function AdminCatalogPage() {
           )}
           mobileSecondary={(a) => (
             <div className="flex flex-wrap items-center gap-2">
-              <CategoryBadge cat={a.category} />
               <LiveBadge live={a.live} />
+              <span className="num">{formatUsd(a.priceUsd)}</span>
+              {a.source === "featured" ? <FeaturedBadge /> : <span className="text-[11px]">8004scan</span>}
               <CopyText value={a.id} />
             </div>
           )}
           mobileActions={(a) => (
             <>
-              <select
+              <AdminSelect
+                aria-label="Category"
+                size="sm"
+                className="w-full max-w-[14rem]"
                 value={a.category}
-                onChange={(e) => patch(a.id, { category: e.target.value as Category })}
-                className="h-10 rounded-[6px] border border-bas-hairline bg-bas-canvas px-2"
-              >
-                {CATEGORIES.map((c) => (
-                  <option key={c} value={c}>
-                    {categoryLabel(c)}
-                  </option>
-                ))}
-              </select>
-              <button type="button" className="text-bas-primary" onClick={() => patch(a.id, { featured: !a.featured })}>
-                {a.featured ? "Unfeature" : "Feature"}
-              </button>
-              <button type="button" className="text-bas-primary" onClick={() => patch(a.id, { hireable: !a.hireable })}>
-                {a.hireable ? "Unhire" : "Hireable"}
-              </button>
-              <button type="button" className="text-bas-down" onClick={() => patch(a.id, { hidden: true })}>
+                disabled={busy === a.id}
+                onChange={(v) => void patch(a.id, { category: v }, "Category updated")}
+                options={CATEGORIES.map((c) => ({ id: c, label: categoryLabel(c) }))}
+              />
+              <FlagBtn
+                on={a.featured}
+                label="Featured"
+                onLabel="Featured"
+                offLabel="Feature"
+                busy={busy === a.id}
+                onClick={() => void patch(a.id, { featured: !a.featured }, a.featured ? "Unfeatured" : "Featured")}
+              />
+              <FlagBtn
+                on={a.hireable}
+                label="Hireable"
+                onLabel="Hireable"
+                offLabel="Hire"
+                busy={busy === a.id}
+                onClick={() => void patch(a.id, { hireable: !a.hireable }, a.hireable ? "Not hireable" : "Hireable")}
+              />
+              <Button size="sm" variant="danger" disabled={busy === a.id} onClick={() => setConfirmHide(a.id)}>
                 Hide
-              </button>
+              </Button>
             </>
           )}
           columns={[
@@ -201,11 +304,15 @@ export default function AdminCatalogPage() {
               label: "Agent",
               cell: (a) => (
                 <>
-                  <Link href={agentPath(a.chainId, a.tokenId)} className="text-bas-heading hover:text-bas-primary">
+                  <Link
+                    href={agentPath(a.chainId, a.tokenId)}
+                    className="font-medium text-bas-heading hover:text-bas-primary"
+                  >
                     {a.name}
                   </Link>
-                  <div>
+                  <div className="mt-0.5 flex flex-wrap items-center gap-2">
                     <CopyText value={a.id} />
+                    {a.source === "featured" ? <FeaturedBadge /> : <span className="text-[11px] text-bas-muted">8004scan</span>}
                   </div>
                 </>
               ),
@@ -213,54 +320,84 @@ export default function AdminCatalogPage() {
             {
               label: "Category",
               cell: (a) => (
-                <>
-                  <select
-                    value={a.category}
-                    onChange={(e) => patch(a.id, { category: e.target.value as Category })}
-                    className="h-8 rounded-[6px] border border-bas-hairline bg-bas-canvas px-2 text-xs"
-                  >
-                    {CATEGORIES.map((c) => (
-                      <option key={c} value={c}>
-                        {categoryLabel(c)}
-                      </option>
-                    ))}
-                  </select>
-                  <div className="mt-1">
-                    <CategoryBadge cat={a.category} />
-                  </div>
-                </>
+                <AdminSelect
+                  aria-label="Category"
+                  size="sm"
+                  className="max-w-[11rem]"
+                  value={a.category}
+                  disabled={busy === a.id}
+                  onChange={(v) => void patch(a.id, { category: v }, "Category updated")}
+                  options={CATEGORIES.map((c) => ({ id: c, label: categoryLabel(c) }))}
+                />
               ),
             },
             { label: "Live", cell: (a) => <LiveBadge live={a.live} /> },
-            { label: "Owner", cell: (a) => <span className="num text-xs">{shortAddr(a.owner)}</span> },
             {
-              label: "Actions",
+              label: "Market",
               cell: (a) => (
-                <div className="space-x-2 text-xs">
-                  <button type="button" className="text-bas-primary" onClick={() => patch(a.id, { featured: !a.featured })}>
-                    {a.featured ? "Unfeature" : "Feature"}
-                  </button>
-                  <button type="button" className="text-bas-primary" onClick={() => patch(a.id, { hireable: !a.hireable })}>
-                    {a.hireable ? "Unhire" : "Make hireable"}
-                  </button>
-                  <button type="button" className="text-bas-down" onClick={() => patch(a.id, { hidden: true })}>
-                    Hide
-                  </button>
+                <div className="flex flex-wrap gap-1.5">
+                  <FlagBtn
+                    on={a.featured}
+                    label="Featured"
+                    onLabel="Featured"
+                    offLabel="Feature"
+                    busy={busy === a.id}
+                    onClick={() => void patch(a.id, { featured: !a.featured }, a.featured ? "Unfeatured" : "Featured")}
+                  />
+                  <FlagBtn
+                    on={a.hireable}
+                    label="Hireable"
+                    onLabel="Hireable"
+                    offLabel="Hire"
+                    busy={busy === a.id}
+                    onClick={() => void patch(a.id, { hireable: !a.hireable }, a.hireable ? "Not hireable" : "Hireable")}
+                  />
                 </div>
+              ),
+            },
+            {
+              label: "Price",
+              className: "whitespace-nowrap",
+              cell: (a) => <span className="num">{formatUsd(a.priceUsd)}</span>,
+            },
+            {
+              label: "Owner",
+              cell: (a) => <span className="num text-xs text-bas-muted">{shortAddr(a.owner)}</span>,
+            },
+            {
+              label: "",
+              className: "text-right",
+              cell: (a) => (
+                <Button size="sm" variant="danger" disabled={busy === a.id} onClick={() => setConfirmHide(a.id)}>
+                  Hide
+                </Button>
               ),
             },
           ]}
           empty={<EmptyState title="No agents match" body="Clear the search or switch filters." />}
         />
       )}
-      {confirmHide ? (
+      {confirmHide === "bulk" ? (
         <Confirm
           title="Hide selected agents"
           body={`Remove ${selected.length} agents from the public market. You can reset overrides later.`}
           confirm="Hide"
           danger
-          onCancel={() => setConfirmHide(false)}
-          onConfirm={() => bulk({ hidden: true })}
+          onCancel={() => setConfirmHide(null)}
+          onConfirm={() => void bulk({ hidden: true })}
+        />
+      ) : null}
+      {hideTarget ? (
+        <Confirm
+          title={`Hide ${hideTarget.name}?`}
+          body="It drops off the public market. You can restore it from overrides later."
+          confirm="Hide"
+          danger
+          onCancel={() => setConfirmHide(null)}
+          onConfirm={() => {
+            setConfirmHide(null);
+            void patch(hideTarget.id, { hidden: true }, "Hidden");
+          }}
         />
       ) : null}
     </div>

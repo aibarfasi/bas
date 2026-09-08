@@ -1,14 +1,15 @@
 import { AppShell } from "@/components/shell/AppShell";
 import { Button } from "@/components/ui/Button";
+import { BRIEF_COMPARE_HREF } from "@/lib/compare/sellers";
 
 export default function JudgesPage() {
   return (
     <AppShell>
-      <p className="text-xs text-bas-muted">Submission · 90 seconds</p>
+      <p className="text-xs text-bas-muted">Submission · ~90 seconds</p>
       <h1 className="mt-2 text-3xl font-semibold text-bas-heading">Judge path</h1>
       <p className="mt-3 max-w-2xl text-sm leading-6 text-bas-muted">
-        Someone with zero Agent Studio knowledge should finish this without a
-        dead end. Phone or desktop.
+        The product is the venue. Find an ERC-8004 agent, read the record, hire
+        it. Demo is enough — no wallet, no invented txs.
       </p>
 
       <ol className="mt-8 space-y-4">
@@ -16,56 +17,42 @@ export default function JudgesPage() {
           {
             n: "1",
             t: "Land",
-            d: "Home states the product. Four equal categories: Monitoring (rebalancing in the rubric), Grid, Yield, Health. Stats come from 8004scan.",
+            d: "BNB Agent Studio marketplace. Four equal categories from the brief: Monitoring, Grid trading, Health factor, Yield.",
             href: "/",
             cta: "Home",
           },
           {
             n: "2",
-            t: "Find by category",
-            d: "Open Market. Use the four filters (Monitoring = Range Guard). Uncategorized stays visible.",
-            href: "/market?cat=grid",
-            cta: "Grid market",
+            t: "Find",
+            d: "Market filtered to Monitoring. BAS Range Guard is the hire-ready seller. Uncategorized 8004scan records stay visible.",
+            href: "/market?cat=monitoring",
+            cta: "Monitoring market",
           },
           {
             n: "3",
             t: "Understand",
-            d: "Open BAS Grid Pilot. Read win rate, window, risk, Pancake venue, Altana policy.",
-            href: "/agent/97/bas-grid",
+            d: "Open Range Guard. Job, win rate, Pancake venue, Altana cap and allowlist, 8004scan identity.",
+            href: "/agent/97/bas-rebalance",
             cta: "Agent",
           },
           {
             n: "4",
             t: "Compare",
-            d: "Add two BAS sellers, open Compare, hire from the table.",
-            href: "/compare",
+            d: "Four BAS sellers side by side — Monitoring, Grid, Health, Yield. Hire from the table.",
+            href: BRIEF_COMPARE_HREF,
             cta: "Compare",
           },
           {
             n: "5",
-            t: "Activate",
-            d: "Hire → scope session → pay x402 → deliverable. Continue as demo if you have no wallet.",
-            href: "/hire/97-bas-grid",
-            cta: "Hire Grid Pilot",
+            t: "Hire + revoke",
+            d: "Continue as demo. Scope cap → pay x402 → land on /session/[id]. Revoke there. Receipts write to /proofs.",
+            href: "/hire/97-bas-rebalance",
+            cta: "Hire Range Guard",
           },
           {
             n: "6",
-            t: "Revoke",
-            d: "After pay you land on /session/[id]. Cap, expiry countdown, allowlist, Revoke. Public receipts also live on /proofs.",
-            href: "/hire/97-bas-grid",
-            cta: "Hire then revoke",
-          },
-          {
-            n: "7",
-            t: "TermiX proof",
-            d: "Advantage report: trade, security, yield, and equities. Time / cost / quality plus downloadable JSON attachments.",
-            href: "/advantage",
-            cta: "Report",
-          },
-          {
-            n: "8",
             t: "Public proofs",
-            d: "Altana grant/revoke and x402 receipts without admin. Fixtures stay if the serverless memory reset. bag deploy adds KeyStore txs.",
+            d: "Altana grant/revoke and x402 receipts. No admin. Fixtures stay if serverless memory reset.",
             href: "/proofs",
             cta: "Proofs",
           },
@@ -87,12 +74,23 @@ export default function JudgesPage() {
       </ol>
 
       <section className="mt-8 rounded-[12px] bg-bas-card p-5 text-sm text-bas-muted">
+        <h2 className="font-semibold text-bas-heading">If you have one more minute</h2>
+        <p className="mt-2">
+          <a href="/advantage" className="text-bas-primary">
+            /advantage
+          </a>{" "}
+          is the TermiX report: Monitoring, trade, health, yield, plus an equities swing book. JSON
+          attachments download from each card.
+        </p>
+      </section>
+
+      <section className="mt-4 rounded-[12px] bg-bas-card p-5 text-sm text-bas-muted">
         <h2 className="font-semibold text-bas-heading">Tracks ticked</h2>
         <ul className="mt-3 space-y-1">
-          <li>Main — discover, compare, hire. Monitoring = rebalancing. Grid, yield, health.</li>
-          <li>TermiX — /advantage: trade, security, yield, equities + JSON attachments.</li>
-          <li>Altana — cap, allowlist, expiry, revoke, public /proofs + explorer. bag deploy for KeyStore txs.</li>
-          <li>PancakeSwap — Smart Router / NFPM, recipient = you, minOut ≠ 0, yield + pool-gap research.</li>
+          <li>Main — discover, compare, hire. Four brief categories, equal template.</li>
+          <li>TermiX — /advantage with hire CTAs on the live site.</li>
+          <li>AltLayer / Altana — cap, allowlist, expiry, revoke, public /proofs + explorer wallets.</li>
+          <li>PancakeSwap — Smart Router / NFPM, recipient = you, minOut ≠ 0. Agent never holds funds.</li>
         </ul>
       </section>
     </AppShell>

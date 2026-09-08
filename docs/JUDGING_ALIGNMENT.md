@@ -6,15 +6,15 @@ BAS is a marketplace, not a portfolio of bots.
 
 | Criterion | Where to look |
 | --- | --- |
-| Functionality | `/` → `/market?cat=*` → `/agent/97/bas-grid` → `/hire/97-bas-grid` → `/session/*`. Demo mode never dead-ends. |
-| Data quality | 8004scan catalog + score, feedback, x402, live. Category search. Uncategorized stays visible. Win/PnL only when the operator published them. |
-| Agent diversity | Monitoring (Range Guard), grid, yield, health share one template. Home tiles are equal. |
+| Functionality | `/` → `/market?cat=monitoring` → `/agent/97/bas-rebalance` → compare four sellers → `/hire/97-bas-rebalance` → `/session/*`. Demo mode never dead-ends. |
+| Data quality | 8004scan catalog + score, feedback, x402, live. Category search. Uncategorized stays visible. Win/PnL only when the operator published them. Registry txs only when they are published 64-byte hex. |
+| Agent diversity | Monitoring (Range Guard), grid, yield, health share one template. Home tiles are equal. Equity Scout is TermiX extra, not a fifth brief category. |
 
 ## TermiX
 
 - `/advantage` and `AGENT_ADVANTAGE_REPORT.md`
-- Four tasks: trading, security, yield, equities
-- Hire Grid Pilot, Health Sentinel, Yield Router, Equity Scout
+- Five tasks: monitoring, trading, security, yield, equities
+- Hire Range Guard, Grid Pilot, Health Sentinel, Yield Router, Equity Scout
 
 ## Altana
 

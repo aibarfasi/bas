@@ -35,16 +35,40 @@ export default async function AdvantagePage() {
 
   const tasks = [
     {
-      id: "1",
-      kind: "Trade",
+      id: "monitoring",
+      kind: "Monitoring",
+      ask: "Is this V3 LP still in range, or are fees going idle?",
+      title: "LP range watch",
+      agent: "BAS Range Guard",
+      hire: "/hire/97-bas-rebalance",
+      attachment: "monitoring",
+      window: "30d",
+      winRate: "81.2%",
+      risk: "NFPM allowlist · you still sign the recenter",
+      why: "Brief category",
+      manual: {
+        time: "9 min 10s",
+        cost: "$0, easy to miss a tick",
+        result: "Pancake info + NFT manager. Range looked fine. Missed that the book already left the band.",
+      },
+      agentRun: {
+        time: "31s",
+        cost: "$0.12",
+        result: "Position 12% below lower tick. Fees idle. Recenter 0.05 WBNB / USDT 0.05%. You sign; agent never holds the NFT.",
+      },
+    },
+    {
+      id: "trade",
+      kind: "Grid trading",
       ask: "Swap 0.05 WBNB to USDT without mistyping the recipient.",
       title: "PancakeSwap swap",
       agent: "BAS Grid Pilot",
       hire: "/hire/97-bas-grid",
+      attachment: "trade",
       window: "30d",
       winRate: "63.5%",
       risk: "0.5% minOut · recipient locked to you",
-      why: "Trading",
+      why: "TermiX · trading",
       manual: {
         time: "6 min 40s",
         cost: "Gas + 0.25% fee",
@@ -63,10 +87,11 @@ export default async function AdvantagePage() {
       title: "Health-factor scan",
       agent: "BAS Health Sentinel",
       hire: "/hire/97-bas-health",
+      attachment: "security",
       window: "30d",
       winRate: "96.0%",
       risk: "Read-only · spend cap 0",
-      why: "Security",
+      why: "TermiX · security",
       manual: {
         time: "11 min 20s",
         cost: "$0, easy to miss a market",
@@ -85,10 +110,11 @@ export default async function AdvantagePage() {
       title: "Farm ranking",
       agent: "BAS Yield Router",
       hire: "/hire/97-bas-yield",
+      attachment: "yield",
       window: "30d",
       winRate: "74.0%",
       risk: "Research first · you still sign",
-      why: "Yield",
+      why: "Brief category",
       manual: {
         time: "10 min 00s",
         cost: "$0, stale tabs",
@@ -107,10 +133,11 @@ export default async function AdvantagePage() {
       title: "Equity-style swing book",
       agent: "BAS Equity Scout",
       hire: "/hire/97-bas-equity",
+      attachment: "equities",
       window: "30d",
       winRate: "71.0%",
       risk: "Research only · you still place the trade",
-      why: "Equities",
+      why: "TermiX extra",
       manual: {
         time: "14 min 10s",
         cost: "$0, chart tabs",
@@ -134,18 +161,18 @@ export default async function AdvantagePage() {
 
   return (
     <AppShell>
-      <p className="text-xs text-bas-muted">TermiX track · trade · security · yield · equities</p>
+      <p className="text-xs text-bas-muted">TermiX track · four brief categories · equities extra</p>
       <h1 className="mt-2 text-3xl font-semibold text-bas-heading">
         You vs a hired agent
       </h1>
       <p className="mt-3 max-w-2xl text-sm leading-6 text-bas-muted">
         Same job, two ways. Do it yourself, or hire on BAS. Time, cost, and the
-        actual output. Trade, security, yield, and an equities swing book. Your
-        funds stay with you either way.
+        actual output. Monitoring, grid, health, yield — plus a TermiX equities
+        swing book. Your funds stay with you either way.
       </p>
 
       <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <Stat n="4" l="Tasks compared" />
+        <Stat n="5" l="Tasks compared" />
         <Stat n={`${savedMin}m ${savedSec.toString().padStart(2, "0")}s`} l="Time saved in total" />
         <Stat n="0" l="User funds held by the agent" />
       </div>
@@ -157,7 +184,7 @@ export default async function AdvantagePage() {
               <div>
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="num text-xs text-bas-primary">{t.kind}</span>
-                  <span className="text-xs text-bas-muted">{t.why} required</span>
+                  <span className="text-xs text-bas-muted">{t.why}</span>
                 </div>
                 <h2 className="mt-1 text-lg font-semibold text-bas-heading">{t.title}</h2>
                 <p className="mt-1 text-sm text-bas-muted">{t.ask}</p>
@@ -172,7 +199,7 @@ export default async function AdvantagePage() {
                 </span>
                 <Button href={t.hire}>Hire {t.agent.replace("BAS ", "")}</Button>
                 <a
-                  href={`/api/advantage/attachments?task=${t.id === "1" ? "trade" : t.id === "2" ? "security" : t.id === "3" ? "yield" : "equities"}`}
+                  href={`/api/advantage/attachments?task=${t.attachment}`}
                   className="text-xs text-bas-primary"
                 >
                   Download output JSON
@@ -207,10 +234,10 @@ export default async function AdvantagePage() {
         </p>
         <ol className="mt-4 space-y-3 text-sm">
           <Step n="1" href="/docs/judges" label="Open the judge path">
-            Land, pick a category, then hire.
+            Land, pick Monitoring, then hire.
           </Step>
-          <Step n="2" href="/hire/97-bas-grid" label="Hire Grid Pilot">
-            Then Health, Yield, and Equity Scout. Copy each session deliverable.
+          <Step n="2" href="/hire/97-bas-rebalance" label="Hire Range Guard">
+            Then Grid, Health, Yield, and Equity Scout. Copy each session deliverable.
           </Step>
           <Step n="3" href="https://pancakeswap.finance/swap" label="Do the same job by hand">
             Pancake swap UI, Venus / BscScan, three farm pages. Time yourself.

@@ -4,11 +4,12 @@
 - [x] Public GitHub, MIT license — https://github.com/aibarfasi/bas
 - [ ] Intake form submitted in the browser (API POST is 401)
 - [x] `/docs/judges` works on a phone
-- [x] Hire Grid Pilot without a wallet (demo) and with an injected wallet
+- [x] Hire Range Guard without a wallet (demo) and with an injected wallet
 - [x] Session revoke + public receipt visible
 - [x] Public `/proofs` (fixtures + live, no admin)
-- [x] `/advantage` has trade, security, yield, equities + JSON attachments
-- [x] Monitoring label on Range Guard (brief: monitoring agents; rubric: rebalancing)
+- [x] `/advantage` has monitoring, trade, security, yield, equities + JSON attachments
+- [x] Four equal brief categories on home + market (Range Guard = Monitoring)
+- [x] Compare deep link covers all four BAS sellers
 - [ ] After `bag deploy`, paste ERC-8004 token ids and Altana KeyStore txs here
 
 ## Live agents (hire-ready)

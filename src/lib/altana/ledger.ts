@@ -1,6 +1,12 @@
+import {
+  getAltanaReceipt,
+  listAltanaReceipts,
+  putAltanaReceipt,
+} from "@/lib/admin/store";
+
 export type SessionReceipt = {
   id: string;
-  action: "grant" | "revoke";
+  action: "grant" | "revoke" | "renew" | "topup" | "dispute";
   sessionId: string;
   agentId: string;
   agentName: string;
@@ -12,22 +18,23 @@ export type SessionReceipt = {
   allowlist: { label: string; address: string }[];
   grantSig: string | null;
   revokeSig: string | null;
+  grantHash?: string | null;
+  revokeHash?: string | null;
+  grantTx?: string | null;
+  revokeTx?: string | null;
   demo: boolean;
   explorer: string;
   createdAt: number;
 };
 
-const receipts = new Map<string, SessionReceipt>();
-
 export function putReceipt(r: SessionReceipt) {
-  receipts.set(r.id, r);
-  return r;
+  return putAltanaReceipt(r);
 }
 
 export function getReceipt(id: string) {
-  return receipts.get(id) ?? null;
+  return getAltanaReceipt(id);
 }
 
 export function listReceipts() {
-  return [...receipts.values()].sort((a, b) => b.createdAt - a.createdAt).slice(0, 40);
+  return listAltanaReceipts();
 }

@@ -7,6 +7,14 @@ export async function termixAttachments() {
   return {
     generatedAt: new Date().toISOString(),
     tasks: {
+      monitoring: {
+        agent: "BAS Range Guard",
+        hire: "/hire/97-bas-rebalance",
+        title: "LP range watch (no custody)",
+        position: "12% below lower tick",
+        action: "Recenter 0.05 WBNB / USDT 0.05%",
+        custody: "You sign the NFT manager tx. Agent never holds the position.",
+      },
       trade: {
         agent: "BAS Grid Pilot",
         hire: "/hire/97-bas-grid",

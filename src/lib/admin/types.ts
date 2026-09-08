@@ -1,6 +1,9 @@
 import type { AgentFeedback, Category, MarketplaceAgent } from "@/lib/agents/types";
 import type { HiredSession } from "@/lib/altana/sessions";
+import type { SessionReceipt } from "@/lib/altana/ledger";
 import type { HireJob } from "@/lib/hire/types";
+import type { SellerClaim } from "@/lib/claim/types";
+import type { X402Receipt } from "@/lib/x402/receipts";
 
 export type AgentPatch = {
   id: string;
@@ -82,6 +85,9 @@ export type AdminState = {
   audit: AuditEvent[];
   sessions: HiredSession[];
   jobs: HireJob[];
+  altanaReceipts: SessionReceipt[];
+  x402Receipts: X402Receipt[];
+  claims: SellerClaim[];
 };
 
 export type AgentDraft = {

@@ -1,3 +1,5 @@
+import { listX402Receipts, putX402Receipt } from "@/lib/admin/store";
+
 export type X402Receipt = {
   id: string;
   kind: string;
@@ -10,19 +12,18 @@ export type X402Receipt = {
   recipient: string;
   paidAt: number;
   demo: boolean;
+  settled?: boolean;
+  resource?: string | null;
 };
 
-const receipts = new Map<string, X402Receipt>();
-
 export function putPayment(r: X402Receipt) {
-  receipts.set(r.id, r);
-  return r;
+  return putX402Receipt(r);
 }
 
 export function getPayment(id: string) {
-  return receipts.get(id) ?? null;
+  return listX402Receipts().find((x) => x.id === id) ?? null;
 }
 
 export function listPayments() {
-  return [...receipts.values()].sort((a, b) => b.paidAt - a.paidAt).slice(0, 80);
+  return listX402Receipts();
 }

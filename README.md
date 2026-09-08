@@ -6,12 +6,15 @@ Find an agent by category, read the track record, scope an Altana session, pay w
 
 ## Judge path (90 seconds)
 
-1. [/](/) — land
-2. [/market?cat=grid](/market?cat=grid) — find
-3. [/agent/97/bas-grid](/agent/97/bas-grid) — understand
-4. [/hire/97-bas-grid](/hire/97-bas-grid) — activate (demo if no wallet)
-5. Session page — revoke
-6. [/advantage](/advantage) — TermiX report
+1. [/](/) — land. Four equal categories from the brief.
+2. [/market?cat=monitoring](/market?cat=monitoring) — find Range Guard
+3. [/agent/97/bas-rebalance](/agent/97/bas-rebalance) — understand
+4. [/compare?ids=97-bas-rebalance,97-bas-grid,97-bas-health,97-bas-yield](/compare?ids=97-bas-rebalance,97-bas-grid,97-bas-health,97-bas-yield) — compare all four
+5. [/hire/97-bas-rebalance](/hire/97-bas-rebalance) — hire (demo if no wallet)
+6. Session page — revoke
+7. [/proofs](/proofs) — public Altana + x402 receipts
+
+Optional: [/advantage](/advantage) — TermiX report (Monitoring + trade + security + yield + equities).
 
 Full script: `/docs/judges`. Rubric map: `docs/JUDGING_ALIGNMENT.md`.
 
@@ -27,7 +30,7 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:3000
+Open http://localhost:3000 (this checkout often uses http://127.0.0.1:3011).
 
 ## Live
 
@@ -41,10 +44,14 @@ npx vercel --prod
 
 ## Tracks
 
-- **Main** — discover, compare, hire. Monitoring, grid, yield, health.
-- **TermiX** — `/advantage`: trade, security, yield, equities.
+- **Main** — discover, compare, hire. Monitoring, grid trading, health factor, yield. Same template.
+- **TermiX** — `/advantage`: Monitoring, trading, security, yield, plus an equities swing book.
 - **Altana** — allowlist, spend cap, expiry, revoke, public receipts.
-- **PancakeSwap** — no-custody swaps / LP / yield. `minOut` never 0.
+- **PancakeSwap** — no-custody swaps / LP / yield. `minOut` never 0. Recipient = hirer.
+
+## Honest limits
+
+`bag deploy` is still required for live ERC-8004 token ids and Altana KeyStore explorer txs. Hire, demo revoke, and `/proofs` work before that. Pancake quotes are simulated against the Smart Router allowlist; they are not live router calls. Do not invent on-chain hashes.
 
 ## License
 

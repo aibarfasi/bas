@@ -6,6 +6,7 @@ import { agentToDraft, emptyDraft } from "@/lib/admin/draft";
 import type { AgentDraft } from "@/lib/admin/types";
 import { CATEGORIES, type AgentFeedback, type MarketplaceAgent } from "@/lib/agents/types";
 import { CATEGORY_META } from "@/lib/categories";
+import { AdminSelect } from "@/components/admin/AdminSelect";
 
 export function AgentForm({
   initial,
@@ -79,17 +80,15 @@ export function AgentForm({
           <input required value={draft.tokenId} onChange={(e) => set("tokenId", e.target.value)} className={inputCls} />
         </Field>
         <Field label="Category">
-          <select
+          <AdminSelect
+            aria-label="Category"
             value={draft.category}
-            onChange={(e) => set("category", e.target.value as AgentDraft["category"])}
-            className={inputCls}
-          >
-            {CATEGORIES.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </select>
+            onChange={(v) => set("category", v)}
+            options={CATEGORIES.map((c) => ({
+              id: c,
+              label: c === "uncategorized" ? "Uncategorized" : CATEGORY_META[c].label,
+            }))}
+          />
         </Field>
         <Field label="Chain id">
           <input
@@ -111,12 +110,12 @@ export function AgentForm({
         <Field label="Tx hash">
           <input value={draft.txHash} onChange={(e) => set("txHash", e.target.value)} className={inputCls} />
         </Field>
-        <div className="md:col-span-2 flex flex-wrap gap-4 text-sm">
-          <Flag label="Featured" checked={draft.featured} onChange={(v) => set("featured", v)} />
-          <Flag label="Hireable" checked={draft.hireable} onChange={(v) => set("hireable", v)} />
-          <Flag label="Live" checked={draft.live} onChange={(v) => set("live", v)} />
-          <Flag label="Verified" checked={draft.verified} onChange={(v) => set("verified", v)} />
-          <Flag label="x402" checked={draft.x402} onChange={(v) => set("x402", v)} />
+        <div className="md:col-span-2 grid gap-3 sm:grid-cols-2">
+          <Flag label="Featured" hint="Pinned in the market strip." checked={draft.featured} onChange={(v) => set("featured", v)} />
+          <Flag label="Hireable" hint="Shows Hire and session grant." checked={draft.hireable} onChange={(v) => set("hireable", v)} />
+          <Flag label="Live" hint="Face responding. Locked after save." checked={draft.live} onChange={(v) => set("live", v)} />
+          <Flag label="Verified" hint="Check on the public card." checked={draft.verified} onChange={(v) => set("verified", v)} />
+          <Flag label="x402" hint="Pay-to-hire rail advertised." checked={draft.x402} onChange={(v) => set("x402", v)} />
         </div>
       </Section>
 
@@ -124,9 +123,9 @@ export function AgentForm({
         title="Story"
         hint="Public copy on the agent page. Empty job/pancake falls back to the category template."
         action={
-          <button type="button" onClick={fillStory} className="text-xs text-bas-primary">
+          <Button size="sm" variant="secondary" onClick={fillStory}>
             Fill from category
-          </button>
+          </Button>
         }
       >
         <label className="md:col-span-2 text-xs text-bas-muted">
@@ -273,9 +272,9 @@ export function AgentForm({
         title="Feedback"
         hint="Replaces the public feedback list. Add or remove rows — buyers only see what you save."
         action={
-          <button
-            type="button"
-            className="text-xs text-bas-primary"
+          <Button
+            size="sm"
+            variant="secondary"
             onClick={() =>
               update({
                 ...draft,
@@ -294,7 +293,7 @@ export function AgentForm({
             }
           >
             Add review
-          </button>
+          </Button>
         }
       >
         {draft.feedback.length ? (
@@ -330,9 +329,9 @@ export function AgentForm({
                     className={`${inputCls} mt-1 h-16 py-2`}
                   />
                 </label>
-                <button
-                  type="button"
-                  className="text-left text-xs text-bas-down"
+                <Button
+                  size="sm"
+                  variant="danger"
                   onClick={() =>
                     update({
                       ...draft,
@@ -341,7 +340,7 @@ export function AgentForm({
                   }
                 >
                   Remove
-                </button>
+                </Button>
               </div>
             ))}
           </div>
@@ -362,8 +361,8 @@ export function AgentForm({
       </Section>
 
       {error ? <p className="text-sm text-bas-down">{error}</p> : null}
-      <div className="sticky bottom-16 z-10 border-t border-bas-hairline bg-bas-canvas py-3 md:bottom-0">
-        <Button disabled={busy}>{busy ? "Saving…" : submitLabel}</Button>
+      <div className="sticky bottom-0 z-10 border-t border-bas-hairline bg-bas-canvas py-3">
+        <Button type="submit" disabled={busy}>{busy ? "Saving…" : submitLabel}</Button>
       </div>
     </form>
   );
@@ -381,7 +380,7 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-[12px] border border-bas-hairline p-4 sm:p-5">
+    <section className="rounded-[12px] border border-bas-hairline bg-bas-card p-4 sm:p-5">
       <div className="flex items-start justify-between gap-3">
         <div>
           <h2 className="text-sm font-semibold text-bas-heading">{title}</h2>
@@ -405,20 +404,38 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 function Flag({
   label,
+  hint,
   checked,
   onChange,
 }: {
   label: string;
+  hint: string;
   checked: boolean;
   onChange: (v: boolean) => void;
 }) {
   return (
-    <label className="inline-flex items-center gap-2">
-      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} />
-      {label}
-    </label>
+    <button
+      type="button"
+      onClick={() => onChange(!checked)}
+      className="flex w-full items-center justify-between gap-3 rounded-[12px] border border-bas-hairline bg-bas-canvas px-3 py-3 text-left hover:bg-bas-elevated"
+    >
+      <span>
+        <span className="block text-sm font-medium text-bas-heading">{label}</span>
+        <span className="mt-0.5 block text-[11px] text-bas-muted">{hint}</span>
+      </span>
+      <span
+        className={`relative h-5 w-9 shrink-0 rounded-full transition-colors ${checked ? "bg-bas-up" : "bg-bas-surface-strong"}`}
+        aria-hidden
+      >
+        <span
+          className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-[left] ${
+            checked ? "left-[18px]" : "left-0.5"
+          }`}
+        />
+      </span>
+    </button>
   );
 }
 
 const inputCls =
-  "h-12 w-full rounded-[6px] border border-bas-hairline bg-bas-canvas px-3 text-base text-bas-heading sm:h-10 sm:text-sm";
+  "admin-field h-12 w-full px-3 text-base sm:h-10 sm:text-sm";

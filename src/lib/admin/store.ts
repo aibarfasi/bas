@@ -13,7 +13,11 @@ import type {
 import { draftToPatch } from "@/lib/admin/draft";
 import type { MarketplaceAgent } from "@/lib/agents/types";
 import type { HiredSession } from "@/lib/altana/sessions";
+import type { SessionReceipt } from "@/lib/altana/ledger";
 import type { HireJob } from "@/lib/hire/types";
+import type { SellerClaim } from "@/lib/claim/types";
+import type { X402Receipt } from "@/lib/x402/receipts";
+import { loadSqlJson, saveSqlJson } from "@/lib/persist/sql";
 
 const FILE = join(process.cwd(), "data", "admin.json");
 
@@ -38,6 +42,9 @@ function emptyState(): AdminState {
     audit: [],
     sessions: [],
     jobs: [],
+    altanaReceipts: [],
+    x402Receipts: [],
+    claims: [],
   };
 }
 
@@ -58,6 +65,9 @@ function loadFromDisk(): AdminState | null {
       audit: raw.audit ?? [],
       sessions: raw.sessions ?? [],
       jobs: raw.jobs ?? [],
+      altanaReceipts: raw.altanaReceipts ?? [],
+      x402Receipts: raw.x402Receipts ?? [],
+      claims: raw.claims ?? [],
     };
   } catch {
     return null;
@@ -71,11 +81,45 @@ function persist(state: AdminState) {
   } catch {
     // Vercel / read-only FS — keep memory only.
   }
+  void saveSqlJson("admin", state);
 }
 
 function state(): AdminState {
   if (!g.__basAdmin) g.__basAdmin = loadFromDisk() ?? emptyState();
   return g.__basAdmin;
+}
+
+const gHydrate = globalThis as typeof globalThis & { __basSqlHydrated?: boolean };
+
+export async function hydrateFromSql() {
+  if (gHydrate.__basSqlHydrated) return;
+  gHydrate.__basSqlHydrated = true;
+  const remote = await loadSqlJson<AdminState>("admin");
+  if (!remote) return;
+  const cur = g.__basAdmin;
+  const empty =
+    !cur ||
+    (!cur.sessions.length &&
+      !(cur.altanaReceipts?.length) &&
+      !(cur.x402Receipts?.length) &&
+      !cur.jobs.length &&
+      !Object.keys(cur.overrides ?? {}).length);
+  if (empty) {
+    g.__basAdmin = {
+      ...emptyState(),
+      ...remote,
+      overrides: remote.overrides ?? {},
+      custom: remote.custom ?? [],
+      settings: { ...DEFAULT_SETTINGS, ...remote.settings, deployments: remote.settings?.deployments ?? {} },
+      allowlist: remote.allowlist ?? [],
+      audit: remote.audit ?? [],
+      sessions: remote.sessions ?? [],
+      jobs: remote.jobs ?? [],
+      altanaReceipts: remote.altanaReceipts ?? [],
+      x402Receipts: remote.x402Receipts ?? [],
+      claims: remote.claims ?? [],
+    };
+  }
 }
 
 function commit(next: Partial<AdminState>, action: string, detail: string) {
@@ -107,6 +151,47 @@ export function persistHires(sessions: HiredSession[], jobs: HireJob[]) {
   cur.sessions = sessions;
   cur.jobs = jobs;
   persist(cur);
+}
+
+export function listAltanaReceipts() {
+  return [...(state().altanaReceipts ?? [])].sort((a, b) => b.createdAt - a.createdAt).slice(0, 80);
+}
+
+export function putAltanaReceipt(r: SessionReceipt) {
+  const cur = state();
+  cur.altanaReceipts = [r, ...(cur.altanaReceipts ?? []).filter((x) => x.id !== r.id)].slice(0, 80);
+  persist(cur);
+  return r;
+}
+
+export function getAltanaReceipt(id: string) {
+  return (state().altanaReceipts ?? []).find((r) => r.id === id) ?? null;
+}
+
+export function listX402Receipts() {
+  return [...(state().x402Receipts ?? [])].sort((a, b) => b.paidAt - a.paidAt).slice(0, 80);
+}
+
+export function putX402Receipt(r: X402Receipt) {
+  const cur = state();
+  cur.x402Receipts = [r, ...(cur.x402Receipts ?? []).filter((x) => x.id !== r.id)].slice(0, 80);
+  persist(cur);
+  return r;
+}
+
+export function listClaims() {
+  return [...(state().claims ?? [])].sort((a, b) => b.at - a.at);
+}
+
+export function putClaim(c: SellerClaim) {
+  const cur = state();
+  cur.claims = [c, ...(cur.claims ?? []).filter((x) => x.agentId !== c.agentId)].slice(0, 120);
+  persist(cur);
+  return c;
+}
+
+export function getClaim(agentId: string) {
+  return (state().claims ?? []).find((c) => c.agentId === agentId) ?? null;
 }
 
 export function getSettings() {
@@ -158,6 +243,9 @@ export function exportSnapshot() {
     allowlist: cur.allowlist,
     sessions: cur.sessions,
     jobs: cur.jobs,
+    altanaReceipts: cur.altanaReceipts,
+    x402Receipts: cur.x402Receipts,
+    claims: cur.claims,
   };
 }
 
@@ -168,6 +256,9 @@ export function importSnapshot(raw: {
   allowlist?: AdminState["allowlist"];
   sessions?: AdminState["sessions"];
   jobs?: AdminState["jobs"];
+  altanaReceipts?: AdminState["altanaReceipts"];
+  x402Receipts?: AdminState["x402Receipts"];
+  claims?: AdminState["claims"];
 }) {
   commit(
     {
@@ -179,6 +270,9 @@ export function importSnapshot(raw: {
       allowlist: raw.allowlist ?? state().allowlist,
       sessions: raw.sessions ?? state().sessions,
       jobs: raw.jobs ?? state().jobs,
+      altanaReceipts: raw.altanaReceipts ?? state().altanaReceipts,
+      x402Receipts: raw.x402Receipts ?? state().x402Receipts,
+      claims: raw.claims ?? state().claims,
     },
     "snapshot.import",
     "operator snapshot",

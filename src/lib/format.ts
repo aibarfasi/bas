@@ -61,6 +61,23 @@ export function publishedX402(agent: { services: { name: string; endpoint?: stri
   return agent.services.find((s) => s.name === "x402" && s.endpoint)?.endpoint ?? null;
 }
 
+export function canActivate(agent: {
+  hireable: boolean;
+  services: { name: string; endpoint?: string | null }[];
+}) {
+  return agent.hireable || Boolean(publishedX402(agent));
+}
+
+export function hireCta(agent: { hireable: boolean; services: { name: string; endpoint?: string | null }[] }) {
+  if (agent.hireable) return "Hire";
+  if (publishedX402(agent)) return "Hire via x402";
+  return "View";
+}
+
+export function isPublishedTx(hash?: string | null) {
+  return Boolean(hash && /^0x[a-fA-F0-9]{64}$/.test(hash));
+}
+
 export function timeAgo(iso?: string | null) {
   if (!iso) return "—";
   const t = new Date(iso).getTime();

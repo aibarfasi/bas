@@ -2,12 +2,14 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { COMPARE_LIMIT } from "@/lib/compare/sellers";
 
 type CompareState = {
   ids: string[];
   toggle: (id: string) => void;
   clear: () => void;
   has: (id: string) => boolean;
+  setIds: (ids: string[]) => void;
 };
 
 export const useCompareStore = create<CompareState>()(
@@ -20,7 +22,7 @@ export const useCompareStore = create<CompareState>()(
           set({ ids: cur.filter((x) => x !== id) });
           return;
         }
-        if (cur.length >= 3) {
+        if (cur.length >= COMPARE_LIMIT) {
           set({ ids: [...cur.slice(1), id] });
           return;
         }
@@ -28,6 +30,7 @@ export const useCompareStore = create<CompareState>()(
       },
       clear: () => set({ ids: [] }),
       has: (id) => get().ids.includes(id),
+      setIds: (ids) => set({ ids: [...new Set(ids)].slice(0, COMPARE_LIMIT) }),
     }),
     { name: "bas-compare" },
   ),

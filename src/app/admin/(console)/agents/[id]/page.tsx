@@ -6,14 +6,17 @@ import { useRouter } from "next/navigation";
 import { AgentDetailView } from "@/components/agent/AgentDetailView";
 import { AgentForm } from "@/components/admin/AgentForm";
 import { Confirm } from "@/components/admin/Confirm";
+import { CopyText } from "@/components/admin/CopyText";
 import { PageHeader } from "@/components/admin/PageHeader";
+import { Skeleton, StatGrid, StatusBanner } from "@/components/admin/ResponsiveTable";
 import { useToast } from "@/components/admin/Toast";
+import { CategoryBadge, FeaturedBadge, LiveBadge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { adminFetch } from "@/lib/admin/client";
 import { previewFromDraft } from "@/lib/admin/draft";
 import type { AgentDraft, AgentPatch } from "@/lib/admin/types";
 import type { MarketplaceAgent } from "@/lib/agents/types";
-import { agentPath, hirePath } from "@/lib/format";
+import { agentPath, formatUsd, hirePath } from "@/lib/format";
 
 export default function EditAgentPage({
   params,
@@ -29,7 +32,8 @@ export default function EditAgentPage({
   const [custom, setCustom] = useState(false);
   const [notes, setNotes] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [ask, setAsk] = useState<"hide" | "delete" | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [ask, setAsk] = useState<"hide" | "delete" | "reset" | null>(null);
 
   useEffect(() => {
     adminFetch<{ agent: MarketplaceAgent; custom: boolean; override: AgentPatch | null }>(
@@ -41,7 +45,8 @@ export default function EditAgentPage({
         setNotes(d.override?.notes ?? "");
         setPreview(d.agent);
       })
-      .catch((e) => setError(e instanceof Error ? e.message : "Failed"));
+      .catch((e) => setError(e instanceof Error ? e.message : "Failed"))
+      .finally(() => setLoading(false));
   }, [decoded]);
 
   async function onSubmit(draft: AgentDraft) {
@@ -78,6 +83,7 @@ export default function EditAgentPage({
     setAgent(next.agent);
     setPreview(next.agent);
     setNotes(next.override?.notes ?? "");
+    setAsk(null);
     toast("ok", "Overrides reset");
   }
 
@@ -89,17 +95,21 @@ export default function EditAgentPage({
     router.push("/admin/agents");
   }
 
+  if (loading) return <Skeleton rows={6} />;
   if (error) return <p className="text-sm text-bas-down">{error}</p>;
-  if (!agent) return <p className="text-sm text-bas-muted">Loading seller…</p>;
+  if (!agent) return <p className="text-sm text-bas-muted">Seller not found.</p>;
 
   return (
     <div>
       <p className="text-xs text-bas-muted">
-        <Link href="/admin/agents">Sellers</Link> / {agent.name}
+        <Link href="/admin/agents" className="hover:text-bas-heading">
+          Sellers
+        </Link>{" "}
+        / {agent.name}
       </p>
       <PageHeader
         title={agent.name}
-        desc={`${agent.id} · every field here is what buyers see. Live status stays locked after you save it.`}
+        desc="Every field here is what buyers see. Live status stays locked after you save it."
         actions={
           <>
             <Button href={agentPath(agent.chainId, agent.tokenId)} variant="secondary">
@@ -114,6 +124,31 @@ export default function EditAgentPage({
         }
       />
 
+      <StatusBanner
+        tone={agent.live ? "up" : "down"}
+        title={agent.live ? "Live on the market" : "Marked down"}
+        body={
+          <div className="flex flex-wrap items-center gap-2">
+            <CopyText value={agent.id} />
+            <CategoryBadge cat={agent.category} />
+            <LiveBadge live={agent.live} />
+            {agent.featured ? <FeaturedBadge /> : null}
+            <span>{custom ? "BAS seller" : "8004scan"}</span>
+            {agent.liveReason ? <span>· {agent.liveReason}</span> : null}
+          </div>
+        }
+      />
+
+      <StatGrid
+        cols="grid-cols-2 sm:grid-cols-4"
+        items={[
+          { n: formatUsd(agent.priceUsd), l: "Price" },
+          { n: agent.hireable ? "Yes" : "No", l: "Hireable" },
+          { n: agent.featured ? "Yes" : "No", l: "Featured" },
+          { n: agent.feedbackCount, l: "Reviews" },
+        ]}
+      />
+
       <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(320px,420px)]">
         <AgentForm
           key={`${agent.id}-${notes}-${agent.live}-${agent.hireable}`}
@@ -124,16 +159,18 @@ export default function EditAgentPage({
           onChange={(draft) => setPreview(previewFromDraft(agent, draft))}
         />
         <aside className="xl:sticky xl:top-4 xl:self-start">
-          <p className="text-xs font-semibold uppercase tracking-wide text-bas-muted">Buyer preview</p>
-          <p className="mt-1 text-xs text-bas-muted">Updates as you type. Save to publish.</p>
-          <div className="mt-3 max-h-[70vh] overflow-auto rounded-[12px] border border-bas-hairline p-4">
-            {preview ? <AgentDetailView agent={preview} compact /> : null}
+          <div className="rounded-[12px] border border-bas-hairline bg-bas-card p-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-bas-muted">Buyer preview</p>
+            <p className="mt-1 text-xs text-bas-muted">Updates as you type. Save to publish.</p>
+            <div className="mt-3 max-h-[70vh] overflow-auto rounded-[12px] border border-bas-hairline bg-bas-canvas p-4">
+              {preview ? <AgentDetailView agent={preview} compact /> : null}
+            </div>
           </div>
         </aside>
       </div>
 
       <div className="mt-8 flex flex-wrap gap-2">
-        <Button variant="secondary" onClick={reset}>
+        <Button variant="secondary" onClick={() => setAsk("reset")}>
           Reset overrides
         </Button>
         <Button variant="secondary" onClick={() => setAsk("hide")}>
@@ -145,6 +182,16 @@ export default function EditAgentPage({
           </Button>
         ) : null}
       </div>
+      {ask === "reset" ? (
+        <Confirm
+          title="Reset overrides?"
+          body="Operator patches on this seller go back to the scanned or seed copy. Notes are cleared."
+          confirm="Reset"
+          danger
+          onCancel={() => setAsk(null)}
+          onConfirm={() => void reset()}
+        />
+      ) : null}
       {ask === "hide" ? (
         <Confirm
           title="Hide this seller"
@@ -152,7 +199,7 @@ export default function EditAgentPage({
           confirm="Hide"
           danger
           onCancel={() => setAsk(null)}
-          onConfirm={hide}
+          onConfirm={() => void hide()}
         />
       ) : null}
       {ask === "delete" ? (
@@ -162,7 +209,7 @@ export default function EditAgentPage({
           confirm="Delete"
           danger
           onCancel={() => setAsk(null)}
-          onConfirm={remove}
+          onConfirm={() => void remove()}
         />
       ) : null}
     </div>

@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { BasLogo } from "@/components/brand/BasLogo";
+import { AppearanceToggles } from "@/components/theme/AppearanceToggles";
 import { Button } from "@/components/ui/Button";
 
 export default function AdminLoginPage() {
@@ -35,18 +37,29 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="flex min-h-dvh items-end justify-center bg-bas-canvas px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-[max(1.5rem,env(safe-area-inset-top))] text-bas-body sm:items-center">
+    <div className="relative flex min-h-dvh items-end justify-center bg-bas-canvas px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-[max(1.5rem,env(safe-area-inset-top))] text-bas-body sm:items-center">
+      <div className="absolute top-4 right-4 flex items-center gap-2 sm:top-5 sm:right-5">
+        <Link href="/" className="text-xs text-bas-muted hover:text-bas-heading">
+          Market
+        </Link>
+        <AppearanceToggles />
+      </div>
       <form
         onSubmit={submit}
-        className="w-full max-w-sm rounded-[12px] bg-bas-card p-5 sm:p-6"
+        className="admin-panel w-full max-w-sm rounded-[12px] border border-bas-hairline bg-bas-surface-soft p-5 sm:p-6"
       >
         <BasLogo className="h-8 w-auto" />
         <h1 className="mt-4 text-xl font-semibold text-bas-heading">Operator sign in</h1>
         <p className="mt-2 text-sm leading-6 text-bas-muted">
-          Catalog, hires, proofs, and marketplace settings. Default local
-          password is <span className="num text-bas-heading">bas-admin</span>{" "}
-          unless <span className="num">ADMIN_PASSWORD</span> is set.
+          Catalog, hires, proofs, and marketplace settings. Default local password is{" "}
+          <span className="num text-bas-heading">bas-admin</span> unless{" "}
+          <span className="num">ADMIN_PASSWORD</span> is set.
         </p>
+        <ul className="mt-4 space-y-1 text-xs text-bas-muted">
+          <li>Sellers and catalog from 8004scan</li>
+          <li>Hires, proofs, and Pancake allowlist</li>
+          <li>Health, intake, and deploy map</li>
+        </ul>
         <label className="mt-5 block text-xs text-bas-muted">
           Password
           <span className="mt-1 flex gap-2">
@@ -54,21 +67,25 @@ export default function AdminLoginPage() {
               type={show ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="h-12 w-full rounded-[6px] border border-bas-hairline bg-bas-canvas px-3 text-base text-bas-heading sm:h-10 sm:text-sm"
+              className="admin-field h-12 w-full px-3 text-base sm:h-10 sm:text-sm"
               autoFocus
               autoComplete="current-password"
             />
             <button
               type="button"
-              className="h-12 shrink-0 rounded-[6px] bg-bas-elevated px-3 text-xs sm:h-10"
+              className="h-12 shrink-0 rounded-[8px] border border-bas-hairline bg-bas-elevated px-3 text-xs text-bas-heading sm:h-10"
               onClick={() => setShow((v) => !v)}
             >
               {show ? "Hide" : "Show"}
             </button>
           </span>
         </label>
-        {error ? <p className="mt-3 text-sm text-bas-down">{error}</p> : null}
-        <Button className="mt-5 w-full" disabled={busy}>
+        {error ? (
+          <p className="mt-3 rounded-[8px] border border-bas-down/40 bg-bas-down/10 px-3 py-2 text-sm text-bas-down">
+            {error}
+          </p>
+        ) : null}
+        <Button type="submit" className="mt-5 w-full" disabled={busy || !password}>
           {busy ? "Signing in…" : "Enter console"}
         </Button>
       </form>

@@ -17,10 +17,11 @@ Official form: https://forms.gle/9g9XPNFwnYaHAz9L8
 ## Demo script
 
 1. Open `/docs/judges`
-2. Market → Grid → BAS Grid Pilot → Hire (demo is fine)
-3. Session: cap, expiry, allowlist, public receipt, Revoke
-4. `/proofs` for Altana + x402 receipts (no admin)
-5. `/advantage` for trade + security + yield + equities (download JSON)
+2. Home → Market filtered to Monitoring → BAS Range Guard
+3. Compare four sellers (`/compare?ids=97-bas-rebalance,97-bas-grid,97-bas-health,97-bas-yield`)
+4. Hire Range Guard (demo is fine). Cap, expiry, allowlist, public receipt, Revoke
+5. `/proofs` for Altana + x402 receipts (no admin)
+6. `/advantage` for Monitoring + trade + security + yield + equities (download JSON)
 
 ## Onchain / explorer
 

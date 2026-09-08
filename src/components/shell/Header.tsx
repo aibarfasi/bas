@@ -7,10 +7,12 @@ import { BasLogo } from "@/components/brand/BasLogo";
 import { AppearanceToggles } from "@/components/theme/AppearanceToggles";
 import { WalletButton } from "@/components/wallet/WalletButton";
 import { useCompareStore } from "@/lib/compare/store";
+import { useWatchStore } from "@/lib/watch/store";
 
 const NAV = [
   { href: "/market", label: "Market" },
   { href: "/compare", label: "Compare" },
+  { href: "/watch", label: "Watch" },
   { href: "/advantage", label: "Advantage" },
   { href: "/proofs", label: "Proofs" },
   { href: "/docs/judges", label: "Judges" },
@@ -20,6 +22,8 @@ export function Header({ light = false }: { light?: boolean }) {
   const path = usePathname();
   const [open, setOpen] = useState(false);
   const count = useCompareStore((s) => s.ids.length);
+  const watchCount = useWatchStore((s) => s.items.length);
+  const alertCount = useWatchStore((s) => s.alerts.length);
 
   return (
     <header
@@ -53,6 +57,9 @@ export function Header({ light = false }: { light?: boolean }) {
                   {item.label}
                   {item.href === "/compare" && count > 0 ? (
                     <span className="num ml-1 text-bas-primary">{count}</span>
+                  ) : null}
+                  {item.href === "/watch" && (watchCount > 0 || alertCount > 0) ? (
+                    <span className="num ml-1 text-bas-primary">{alertCount || watchCount}</span>
                   ) : null}
                 </Link>
               );
