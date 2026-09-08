@@ -123,7 +123,7 @@ export default function AdminSettingsPage() {
             placeholder="Optional notice shown above every page"
           />
         </Field>
-        <label className="inline-flex items-center gap-2 text-sm">
+        <label className="inline-flex min-h-11 items-center gap-2 text-sm">
           <input
             type="checkbox"
             checked={settings.maintenance}
@@ -131,7 +131,7 @@ export default function AdminSettingsPage() {
           />
           Maintenance mode
         </label>
-        <label className="inline-flex items-center gap-2 text-sm">
+        <label className="inline-flex min-h-11 items-center gap-2 text-sm">
           <input
             type="checkbox"
             checked={settings.hideUncategorized}
@@ -139,7 +139,7 @@ export default function AdminSettingsPage() {
           />
           Hide uncategorized 8004scan agents
         </label>
-        <label className="inline-flex items-center gap-2 text-sm">
+        <label className="inline-flex min-h-11 items-center gap-2 text-sm">
           <input
             type="checkbox"
             checked={Boolean(settings.intakeSubmitted)}
@@ -218,4 +218,4 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 const inputCls =
-  "h-10 w-full rounded-[6px] border border-bas-hairline bg-bas-canvas px-3 text-sm text-bas-heading";
+  "h-12 w-full rounded-[6px] border border-bas-hairline bg-bas-canvas px-3 text-base text-bas-heading sm:h-10 sm:text-sm";

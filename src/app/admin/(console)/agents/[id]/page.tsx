@@ -3,11 +3,14 @@
 import Link from "next/link";
 import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { AgentDetailView } from "@/components/agent/AgentDetailView";
 import { AgentForm } from "@/components/admin/AgentForm";
 import { Confirm } from "@/components/admin/Confirm";
+import { PageHeader } from "@/components/admin/PageHeader";
 import { useToast } from "@/components/admin/Toast";
 import { Button } from "@/components/ui/Button";
 import { adminFetch } from "@/lib/admin/client";
+import { previewFromDraft } from "@/lib/admin/draft";
 import type { AgentDraft, AgentPatch } from "@/lib/admin/types";
 import type { MarketplaceAgent } from "@/lib/agents/types";
 import { agentPath, hirePath } from "@/lib/format";
@@ -22,6 +25,7 @@ export default function EditAgentPage({
   const router = useRouter();
   const toast = useToast();
   const [agent, setAgent] = useState<MarketplaceAgent | null>(null);
+  const [preview, setPreview] = useState<MarketplaceAgent | null>(null);
   const [custom, setCustom] = useState(false);
   const [notes, setNotes] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -35,6 +39,7 @@ export default function EditAgentPage({
         setAgent(d.agent);
         setCustom(d.custom);
         setNotes(d.override?.notes ?? "");
+        setPreview(d.agent);
       })
       .catch((e) => setError(e instanceof Error ? e.message : "Failed"));
   }, [decoded]);
@@ -48,8 +53,9 @@ export default function EditAgentPage({
       `/api/admin/agents/${encodeURIComponent(decoded)}`,
     );
     setAgent(next.agent);
+    setPreview(next.agent);
     setNotes(next.override?.notes ?? draft.notes);
-    toast("ok", "Seller saved");
+    toast("ok", "Public page updated");
   }
 
   async function hide() {
@@ -70,6 +76,7 @@ export default function EditAgentPage({
       `/api/admin/agents/${encodeURIComponent(decoded)}`,
     );
     setAgent(next.agent);
+    setPreview(next.agent);
     setNotes(next.override?.notes ?? "");
     toast("ok", "Overrides reset");
   }
@@ -90,29 +97,41 @@ export default function EditAgentPage({
       <p className="text-xs text-bas-muted">
         <Link href="/admin/agents">Sellers</Link> / {agent.name}
       </p>
-      <div className="mt-2 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-bas-heading">{agent.name}</h1>
-          <p className="num mt-1 text-xs text-bas-muted">{agent.id}</p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button href={agentPath(agent.chainId, agent.tokenId)} variant="secondary">
-            Public page
-          </Button>
-          {agent.hireable ? (
-            <Button href={hirePath(agent.chainId, agent.tokenId)} variant="secondary">
-              Hire
+      <PageHeader
+        title={agent.name}
+        desc={`${agent.id} · every field here is what buyers see. Live status stays locked after you save it.`}
+        actions={
+          <>
+            <Button href={agentPath(agent.chainId, agent.tokenId)} variant="secondary">
+              Open public page
             </Button>
-          ) : null}
-        </div>
-      </div>
-      <AgentForm
-        key={agent.id + agent.name + notes}
-        initial={agent}
-        initialNotes={notes}
-        submitLabel="Save changes"
-        onSubmit={onSubmit}
+            {agent.hireable ? (
+              <Button href={hirePath(agent.chainId, agent.tokenId)} variant="secondary">
+                Hire
+              </Button>
+            ) : null}
+          </>
+        }
       />
+
+      <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(320px,420px)]">
+        <AgentForm
+          key={`${agent.id}-${notes}-${agent.live}-${agent.hireable}`}
+          initial={agent}
+          initialNotes={notes}
+          submitLabel="Publish to market"
+          onSubmit={onSubmit}
+          onChange={(draft) => setPreview(previewFromDraft(agent, draft))}
+        />
+        <aside className="xl:sticky xl:top-4 xl:self-start">
+          <p className="text-xs font-semibold uppercase tracking-wide text-bas-muted">Buyer preview</p>
+          <p className="mt-1 text-xs text-bas-muted">Updates as you type. Save to publish.</p>
+          <div className="mt-3 max-h-[70vh] overflow-auto rounded-[12px] border border-bas-hairline p-4">
+            {preview ? <AgentDetailView agent={preview} compact /> : null}
+          </div>
+        </aside>
+      </div>
+
       <div className="mt-8 flex flex-wrap gap-2">
         <Button variant="secondary" onClick={reset}>
           Reset overrides

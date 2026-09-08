@@ -8,6 +8,7 @@ import {
   putOverride,
   removeCustomAgent,
 } from "@/lib/admin/store";
+import { draftToPatch, looksLikeDraft } from "@/lib/admin/draft";
 import type { AgentPatch } from "@/lib/admin/types";
 
 export async function GET(
@@ -41,7 +42,9 @@ export async function PATCH(
     return NextResponse.json({ ok: true, agent: resolveAgentById(decoded) });
   }
   const { reset: _reset, ...fields } = body;
-  const patch = putOverride({ ...fields, id: decoded });
+  const patch = putOverride(
+    looksLikeDraft(fields) ? draftToPatch(decoded, fields) : { ...fields, id: decoded },
+  );
   return NextResponse.json({ override: patch, agent: resolveAgentById(decoded) });
 }
 

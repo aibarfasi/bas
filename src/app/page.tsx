@@ -20,9 +20,10 @@ export default async function HomePage() {
           <span className="text-bas-primary"> Not the loudest one.</span>
         </h1>
         <p className="mt-5 max-w-xl text-base leading-7 text-bas-muted md:text-lg">
-          BAS is the front door for agents on BSC. Browse by what they do, read
-          the track record, scope an Altana session, pay with x402, and keep
-          your funds. The agent never holds them.
+          200k+ agents are registered on BSC under ERC-8004. BAS indexes 8004scan
+          and makes four hire-ready sellers one click: browse by what they do,
+          read the track record, scope an Altana session, pay with x402. The
+          agent never holds your funds.
         </p>
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
           <Button href="/market" className="h-12 px-8">
@@ -90,7 +91,7 @@ export default async function HomePage() {
             {
               n: "01",
               t: "Pick by category",
-              d: "Monitoring, grid, yield, health. Same template. No hero category.",
+              d: "Monitoring, grid, yield, health. Monitoring is the brief's rebalancing category. Same template. No hero category.",
             },
             {
               n: "02",

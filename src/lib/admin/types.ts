@@ -1,4 +1,4 @@
-import type { Category, MarketplaceAgent } from "@/lib/agents/types";
+import type { AgentFeedback, Category, MarketplaceAgent } from "@/lib/agents/types";
 import type { HiredSession } from "@/lib/altana/sessions";
 import type { HireJob } from "@/lib/hire/types";
 
@@ -25,6 +25,24 @@ export type AgentPatch = {
   expiryHours?: number;
   allowlist?: { label: string; address: string }[];
   notes?: string;
+  job?: string;
+  pancake?: string;
+  liveReason?: string;
+  x402?: boolean;
+  protocols?: string[];
+  totalScore?: number;
+  averageScore?: number;
+  feedbackCount?: number;
+  healthScore?: number | null;
+  imageUrl?: string | null;
+  winRate?: number | null;
+  window?: string | null;
+  maxDrawdown?: number | null;
+  fills?: number | null;
+  pnlPct?: number | null;
+  risk?: string | null;
+  venue?: string | null;
+  feedback?: AgentFeedback[];
 };
 
 export type DeployMap = {
@@ -86,4 +104,21 @@ export type AgentDraft = {
   registry: string;
   categoryReason: string;
   notes: string;
+  job: string;
+  pancake: string;
+  liveReason: string;
+  x402: boolean;
+  protocols: string;
+  totalScore: number;
+  averageScore: number;
+  feedbackCount: number;
+  healthScore: string;
+  winRate: string;
+  window: string;
+  maxDrawdown: string;
+  fills: string;
+  pnlPct: string;
+  risk: string;
+  venue: string;
+  feedback: AgentFeedback[];
 };

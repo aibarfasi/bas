@@ -2,7 +2,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Confirm } from "@/components/admin/Confirm";
+import { CopyText } from "@/components/admin/CopyText";
 import { PageHeader } from "@/components/admin/PageHeader";
+import { Chip, ChipRow, EmptyState, FieldInput, ResponsiveTable } from "@/components/admin/ResponsiveTable";
 import { useToast } from "@/components/admin/Toast";
 import { Button } from "@/components/ui/Button";
 import { adminFetch } from "@/lib/admin/client";
@@ -117,140 +119,141 @@ export default function AdminHiresPage() {
           </>
         }
       />
-      <div className="mt-5 flex flex-col gap-3 lg:flex-row lg:items-center">
-        <div className="flex gap-2">
+      <div className="mt-5 space-y-3">
+        <ChipRow>
           {(["sessions", "jobs"] as const).map((t) => (
-            <button
-              key={t}
-              type="button"
-              onClick={() => setTab(t)}
-              className={`h-9 rounded-[6px] px-3 text-sm ${
-                tab === t ? "bg-bas-primary text-bas-on-primary" : "bg-bas-card"
-              }`}
-            >
+            <Chip key={t} active={tab === t} onClick={() => setTab(t)}>
               {t === "sessions" ? `Sessions (${sessions.length})` : `Jobs (${jobs.length})`}
-            </button>
+            </Chip>
           ))}
-        </div>
-        <input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Search agent, owner, id"
-          className="h-9 w-full max-w-sm rounded-[6px] border border-bas-hairline bg-bas-canvas px-3 text-sm"
-        />
+        </ChipRow>
+        <FieldInput value={q} onChange={setQ} placeholder="Search agent, owner, id" />
         {tab === "sessions" ? (
-          <div className="flex gap-2">
+          <ChipRow>
             {(["all", "active", "revoked", "expired"] as const).map((s) => (
-              <button
-                key={s}
-                type="button"
-                onClick={() => setStateFilter(s)}
-                className={`h-9 rounded-[6px] px-3 text-xs ${
-                  stateFilter === s ? "bg-bas-primary text-bas-on-primary" : "bg-bas-card"
-                }`}
-              >
+              <Chip key={s} active={stateFilter === s} onClick={() => setStateFilter(s)}>
                 {s}
-              </button>
+              </Chip>
             ))}
-          </div>
+          </ChipRow>
         ) : null}
       </div>
       {error ? <p className="mt-3 text-sm text-bas-down">{error}</p> : null}
 
       {tab === "sessions" ? (
-        <div className="mt-4 overflow-x-auto">
-          <table className="w-full min-w-[800px] text-left text-sm">
-            <thead className="text-xs text-bas-muted">
-              <tr>
-                <th className="pb-2 font-medium">Agent</th>
-                <th className="pb-2 font-medium">Owner</th>
-                <th className="pb-2 font-medium">Cap</th>
-                <th className="pb-2 font-medium">State</th>
-                <th className="pb-2 font-medium">Proof</th>
-                <th className="pb-2 font-medium" />
-              </tr>
-            </thead>
-            <tbody>
-              {shownSessions.map((s) => {
-                const st = sessionState(s);
-                return (
-                  <tr key={s.id} className="border-t border-bas-hairline">
-                    <td className="py-3">
-                      <button type="button" className="text-left text-bas-heading hover:text-bas-primary" onClick={() => setOpen(s)}>
-                        {s.agentName}
-                      </button>
-                      <div className="num text-xs text-bas-muted">{s.id}</div>
-                    </td>
-                    <td className="num text-xs">{shortAddr(s.owner)}</td>
-                    <td className="num">
-                      {s.spendCap} {s.spendToken}
-                    </td>
-                    <td>
-                      <span
-                        className={
-                          st === "active" ? "text-bas-up" : st === "revoked" ? "text-bas-down" : "text-bas-muted"
-                        }
-                      >
-                        {st}
-                      </span>
-                      {s.demo ? <span className="ml-2 text-xs text-bas-muted">demo</span> : null}
-                    </td>
-                    <td className="num text-xs text-bas-muted">{s.ledgerId || "—"}</td>
-                    <td>
-                      {st === "active" ? (
-                        <button type="button" className="text-xs text-bas-down" onClick={() => setRevokeId(s.id)}>
-                          Revoke
-                        </button>
-                      ) : null}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-          {shownSessions.length === 0 ? (
-            <p className="mt-4 text-sm text-bas-muted">No mirrored sessions yet. Hire once, or sync this browser.</p>
-          ) : null}
-        </div>
+        <ResponsiveTable
+          rows={shownSessions}
+          rowKey={(s) => s.id}
+          mobilePrimary={(s) => s.agentName}
+          mobileSecondary={(s) => (
+            <div className="flex flex-wrap gap-2">
+              <span className={sessionState(s) === "active" ? "text-bas-up" : "text-bas-muted"}>
+                {sessionState(s)}
+              </span>
+              <span>
+                {s.spendCap} {s.spendToken}
+              </span>
+              <CopyText value={s.id} />
+            </div>
+          )}
+          mobileActions={(s) => (
+            <>
+              <button type="button" className="text-bas-primary" onClick={() => setOpen(s)}>
+                Details
+              </button>
+              {sessionState(s) === "active" ? (
+                <button type="button" className="text-bas-down" onClick={() => setRevokeId(s.id)}>
+                  Revoke
+                </button>
+              ) : null}
+            </>
+          )}
+          columns={[
+            {
+              label: "Agent",
+              cell: (s) => (
+                <>
+                  <button type="button" className="text-left text-bas-heading hover:text-bas-primary" onClick={() => setOpen(s)}>
+                    {s.agentName}
+                  </button>
+                  <div>
+                    <CopyText value={s.id} />
+                  </div>
+                </>
+              ),
+            },
+            { label: "Owner", cell: (s) => <span className="num text-xs">{shortAddr(s.owner)}</span> },
+            {
+              label: "Cap",
+              cell: (s) => (
+                <span className="num">
+                  {s.spendCap} {s.spendToken}
+                </span>
+              ),
+            },
+            {
+              label: "State",
+              cell: (s) => (
+                <span className={sessionState(s) === "active" ? "text-bas-up" : sessionState(s) === "revoked" ? "text-bas-down" : "text-bas-muted"}>
+                  {sessionState(s)}
+                  {s.demo ? <span className="ml-2 text-xs text-bas-muted">demo</span> : null}
+                </span>
+              ),
+            },
+            { label: "Proof", cell: (s) => <span className="num text-xs text-bas-muted">{s.ledgerId || "—"}</span> },
+            {
+              label: "",
+              cell: (s) =>
+                sessionState(s) === "active" ? (
+                  <button type="button" className="text-xs text-bas-down" onClick={() => setRevokeId(s.id)}>
+                    Revoke
+                  </button>
+                ) : null,
+            },
+          ]}
+          empty={<EmptyState title="No sessions" body="Hire once, or sync this browser." />}
+        />
       ) : (
-        <div className="mt-4 overflow-x-auto">
-          <table className="w-full min-w-[760px] text-left text-sm">
-            <thead className="text-xs text-bas-muted">
-              <tr>
-                <th className="pb-2 font-medium">Job</th>
-                <th className="pb-2 font-medium">Rail</th>
-                <th className="pb-2 font-medium">Paid</th>
-                <th className="pb-2 font-medium">Status</th>
-                <th className="pb-2 font-medium">When</th>
-              </tr>
-            </thead>
-            <tbody>
-              {shownJobs.map((j) => (
-                <tr key={j.id} className="border-t border-bas-hairline">
-                  <td className="py-3">
-                    {j.agentName}
-                    <div className="text-xs text-bas-muted">{j.deliverable.title}</div>
-                  </td>
-                  <td className="num text-xs">{j.rail}</td>
-                  <td className="num">${j.paidUsd.toFixed(2)}</td>
-                  <td>{j.status}</td>
-                  <td className="num text-xs text-bas-muted">{timeAgo(new Date(j.startedAt).toISOString())}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <ResponsiveTable
+          rows={shownJobs}
+          rowKey={(j) => j.id}
+          mobilePrimary={(j) => j.agentName}
+          mobileSecondary={(j) => (
+            <div className="flex flex-wrap gap-2">
+              <span>{j.deliverable.title}</span>
+              <span className="num">${j.paidUsd.toFixed(2)}</span>
+              <span>{j.status}</span>
+            </div>
+          )}
+          columns={[
+            {
+              label: "Job",
+              cell: (j) => (
+                <>
+                  {j.agentName}
+                  <div className="text-xs text-bas-muted">{j.deliverable.title}</div>
+                </>
+              ),
+            },
+            { label: "Rail", cell: (j) => <span className="num text-xs">{j.rail}</span> },
+            { label: "Paid", cell: (j) => <span className="num">${j.paidUsd.toFixed(2)}</span> },
+            { label: "Status", cell: (j) => j.status },
+            { label: "When", cell: (j) => <span className="num text-xs text-bas-muted">{timeAgo(new Date(j.startedAt).toISOString())}</span> },
+          ]}
+          empty={<EmptyState title="No jobs" body="A hire writes a job after x402 settles." />}
+        />
       )}
 
       {open ? (
-        <div className="fixed inset-0 z-40 flex justify-end bg-black/50">
-          <aside className="h-full w-full max-w-md overflow-y-auto border-l border-bas-hairline bg-bas-canvas p-5">
+        <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/50 md:items-stretch md:justify-end">
+          <button type="button" className="absolute inset-0" aria-label="Close" onClick={() => setOpen(null)} />
+          <aside className="relative z-10 max-h-[85dvh] w-full overflow-y-auto rounded-t-[16px] border border-bas-hairline bg-bas-canvas p-5 admin-safe md:h-full md:max-h-none md:max-w-md md:rounded-none md:border-l">
             <div className="flex items-start justify-between gap-3">
-              <div>
+              <div className="min-w-0">
                 <h2 className="text-lg font-semibold text-bas-heading">{open.agentName}</h2>
-                <p className="num text-xs text-bas-muted">{open.id}</p>
+                <CopyText value={open.id} />
               </div>
-              <button type="button" className="text-sm text-bas-muted" onClick={() => setOpen(null)}>
+              <button type="button" className="h-10 px-2 text-sm text-bas-muted" onClick={() => setOpen(null)}>
                 Close
               </button>
             </div>
@@ -271,7 +274,7 @@ export default function AdminHiresPage() {
                 </li>
               ))}
             </ul>
-            <div className="mt-6 flex flex-wrap gap-2">
+            <div className="mt-6 flex flex-col gap-2 sm:flex-row">
               <a href={altanaExplorer(open.wallet)} className="text-sm text-bas-primary">
                 Altana explorer
               </a>

@@ -74,6 +74,9 @@ export type MarketplaceAgent = {
   feedback: AgentFeedback[];
   source: "featured" | "8004scan";
   filteredReason?: string;
+  job?: string;
+  pancake?: string;
+  liveLocked?: boolean;
 };
 
 export type AgentsResponse = {

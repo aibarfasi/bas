@@ -57,6 +57,10 @@ export function scanAgent(chainId: number, tokenId: string) {
   return `https://8004scan.io/agent/${chainId}/${tokenId}`;
 }
 
+export function publishedX402(agent: { services: { name: string; endpoint?: string | null }[] }) {
+  return agent.services.find((s) => s.name === "x402" && s.endpoint)?.endpoint ?? null;
+}
+
 export function timeAgo(iso?: string | null) {
   if (!iso) return "—";
   const t = new Date(iso).getTime();

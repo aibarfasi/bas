@@ -235,15 +235,30 @@ export default function SessionPage({
             Recipient {job.deliverable.recipient}
             {address ? ` · connected ${shortAddr(address)}` : ""}
           </p>
+          <a
+            className="mt-4 inline-block text-sm text-bas-primary"
+            href={`data:application/json,${encodeURIComponent(JSON.stringify(job.deliverable, null, 2))}`}
+            download={`${job.id}.json`}
+          >
+            Download deliverable JSON
+          </a>
+          {job.deliverable.raw ? (
+            <pre className="mt-3 max-h-48 overflow-auto rounded-[8px] bg-bas-canvas p-3 text-xs text-bas-muted">
+              {JSON.stringify(job.deliverable.raw, null, 2)}
+            </pre>
+          ) : null}
         </section>
       ) : null}
 
-      <div className="mt-6 flex gap-3">
+      <div className="mt-6 flex flex-wrap gap-4">
         <Button href="/market" variant="secondary">
           Market
         </Button>
         <Link href="/advantage" className="text-sm leading-10 text-bas-muted">
           Advantage report
+        </Link>
+        <Link href="/proofs" className="text-sm leading-10 text-bas-muted">
+          Public proofs
         </Link>
       </div>
     </AppShell>

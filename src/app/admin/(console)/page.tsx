@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/admin/PageHeader";
+import { Skeleton } from "@/components/admin/ResponsiveTable";
 import { Button } from "@/components/ui/Button";
 import { adminFetch } from "@/lib/admin/client";
 import { timeAgo } from "@/lib/format";
@@ -42,6 +43,7 @@ const CAT_LABEL: Record<string, string> = {
 export default function AdminOverviewPage() {
   const [data, setData] = useState<Stats | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [live, setLive] = useState(false);
 
   async function load() {
     setData(await adminFetch<Stats>("/api/admin/stats"));
@@ -51,8 +53,16 @@ export default function AdminOverviewPage() {
     load().catch((e) => setError(e instanceof Error ? e.message : "Failed"));
   }, []);
 
+  useEffect(() => {
+    if (!live) return;
+    const t = window.setInterval(() => {
+      load().catch(() => null);
+    }, 20_000);
+    return () => window.clearInterval(t);
+  }, [live]);
+
   if (error) return <p className="text-sm text-bas-down">{error}</p>;
-  if (!data) return <p className="text-sm text-bas-muted">Loading console…</p>;
+  if (!data) return <Skeleton rows={6} />;
 
   const cards = [
     { n: data.catalog.listed, l: "Listed agents", href: "/admin/catalog" },
@@ -73,6 +83,9 @@ export default function AdminOverviewPage() {
         desc="Live catalog from 8004scan plus BAS sellers you operate."
         actions={
           <>
+            <Button variant="secondary" onClick={() => setLive((v) => !v)}>
+              {live ? "Live on" : "Live off"}
+            </Button>
             <Button variant="secondary" onClick={() => load().catch(() => null)}>
               Refresh
             </Button>

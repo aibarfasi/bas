@@ -60,16 +60,16 @@ export default function AdminAllowlistPage() {
           value={label}
           onChange={(e) => setLabel(e.target.value)}
           placeholder="Label"
-          className="h-10 rounded-[6px] border border-bas-hairline bg-bas-canvas px-3 text-sm sm:w-48"
+          className="h-12 rounded-[6px] border border-bas-hairline bg-bas-canvas px-3 text-base sm:h-10 sm:w-48 sm:text-sm"
         />
         <input
           required
           value={address}
           onChange={(e) => setAddress(e.target.value)}
           placeholder="0x…"
-          className="h-10 flex-1 rounded-[6px] border border-bas-hairline bg-bas-canvas px-3 text-sm"
+          className="h-12 flex-1 rounded-[6px] border border-bas-hairline bg-bas-canvas px-3 text-base sm:h-10 sm:text-sm"
         />
-        <Button>Add</Button>
+        <Button className="w-full sm:w-auto">Add</Button>
       </form>
       {error ? <p className="mt-3 text-sm text-bas-down">{error}</p> : null}
       <ul className="mt-6 divide-y divide-bas-hairline rounded-[12px] bg-bas-card">

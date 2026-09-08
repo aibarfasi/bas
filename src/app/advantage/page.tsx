@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { AppShell } from "@/components/shell/AppShell";
 import { Button } from "@/components/ui/Button";
-import { pancakeYieldBoard, quotePancakeSwap } from "@/lib/pancake/quote";
+import { pancakePoolGap, pancakeYieldBoard, quotePancakeSwap } from "@/lib/pancake/quote";
 
 export const revalidate = 60;
 
@@ -31,6 +31,7 @@ export default async function AdvantagePage() {
   const quote = await quotePancakeSwap({ amountIn: "0.05" });
   const yields = pancakeYieldBoard();
   const best = yields[0];
+  const gap = pancakePoolGap();
 
   const tasks = [
     {
@@ -96,7 +97,7 @@ export default async function AdvantagePage() {
       agentRun: {
         time: "19s",
         cost: "$0.20",
-        result: `${best.pool} leads at ${best.totalApr.toFixed(1)}% (fees ${best.feeApr}% + CAKE ${best.cakeApr}%). TVL $${(best.tvlUsd / 1e6).toFixed(1)}m.`,
+        result: `${best.pool} leads at ${best.totalApr.toFixed(1)}% (fees ${best.feeApr}% + CAKE ${best.cakeApr}%). TVL $${(best.tvlUsd / 1e6).toFixed(1)}m. Pool gap: ${gap.pair} ${gap.feeTier} — ${gap.why}`,
       },
     },
     {
@@ -170,6 +171,12 @@ export default async function AdvantagePage() {
                   {formatSaved(t.manual.time, t.agentRun.time)}
                 </span>
                 <Button href={t.hire}>Hire {t.agent.replace("BAS ", "")}</Button>
+                <a
+                  href={`/api/advantage/attachments?task=${t.id === "1" ? "trade" : t.id === "2" ? "security" : t.id === "3" ? "yield" : "equities"}`}
+                  className="text-xs text-bas-primary"
+                >
+                  Download output JSON
+                </a>
               </div>
             </div>
 

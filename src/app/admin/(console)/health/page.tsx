@@ -57,17 +57,19 @@ export default function AdminHealthPage() {
         {at ? <span className="num ml-3 text-xs text-bas-muted">{at}</span> : null}
       </div>
       {error ? <p className="mt-3 text-sm text-bas-down">{error}</p> : null}
-      <ul className="mt-6 divide-y divide-bas-hairline rounded-[12px] bg-bas-card">
+      <ul className="mt-6 grid gap-3 sm:grid-cols-2">
         {checks.map((c) => (
-          <li key={c.id} className="flex flex-col gap-1 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <div className="text-sm text-bas-heading">{c.id}</div>
-              <div className="text-xs text-bas-muted">{c.detail}</div>
+          <li key={c.id} className="rounded-[12px] bg-bas-card p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <div className="truncate text-sm font-semibold text-bas-heading">{c.id}</div>
+                <div className="mt-1 break-words text-xs text-bas-muted">{c.detail}</div>
+              </div>
+              <span className={c.ok ? "shrink-0 text-xs text-bas-up" : "shrink-0 text-xs text-bas-down"}>
+                {c.ok ? "ok" : "down"}
+              </span>
             </div>
-            <div className="flex items-center gap-3 text-xs">
-              <span className="num text-bas-muted">{c.ms}ms</span>
-              <span className={c.ok ? "text-bas-up" : "text-bas-down"}>{c.ok ? "ok" : "down"}</span>
-            </div>
+            <div className="num mt-3 text-xs text-bas-muted">{c.ms}ms</div>
           </li>
         ))}
       </ul>

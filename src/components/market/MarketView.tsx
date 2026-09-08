@@ -145,8 +145,9 @@ export function MarketView({
               <th className="py-3 font-medium">Category</th>
               <th className="py-3 font-medium">Live</th>
               <th className="py-3 font-medium">Score</th>
-              <th className="py-3 font-medium">Win / PnL</th>
-              <th className="py-3 font-medium">Risk</th>
+              <th className="py-3 font-medium">Feedback</th>
+              <th className="py-3 font-medium">x402</th>
+              <th className="py-3 font-medium">Win</th>
               <th className="py-3 font-medium">Price</th>
               <th className="py-3 font-medium" />
             </tr>
@@ -174,17 +175,18 @@ export function MarketView({
                 <td className="py-3">
                   <LiveBadge live={a.live} />
                 </td>
-                <td className="num py-3">{a.totalScore ? a.totalScore.toFixed(1) : "—"}</td>
+                <td className="num py-3">{a.totalScore ? a.totalScore.toFixed(1) : ""}</td>
+                <td className="num py-3">{a.feedbackCount ? String(a.feedbackCount) : ""}</td>
+                <td className="py-3 text-xs">{a.x402 ? "Yes" : a.protocols[0] ?? ""}</td>
                 <td className="py-3">
-                  <span className={`num ${a.metrics.winRate != null ? "text-bas-body" : "text-bas-muted"}`}>
-                    {a.metrics.winRate != null ? `${a.metrics.winRate.toFixed(1)}%` : "—"}
-                  </span>
-                  <span className={`num ml-2 text-${pnlTone(a.metrics.pnlPct) === "up" ? "bas-up" : pnlTone(a.metrics.pnlPct) === "down" ? "bas-down" : "bas-muted"}`}>
-                    {formatPct(a.metrics.pnlPct)}
-                  </span>
-                </td>
-                <td className="max-w-[180px] truncate py-3 text-xs text-bas-muted">
-                  {a.metrics.risk ?? a.categoryReason}
+                  {a.metrics.winRate != null ? (
+                    <span className="num text-bas-body">{a.metrics.winRate.toFixed(1)}%</span>
+                  ) : null}
+                  {a.metrics.pnlPct != null ? (
+                    <span className={`num ml-2 text-${pnlTone(a.metrics.pnlPct) === "up" ? "bas-up" : pnlTone(a.metrics.pnlPct) === "down" ? "bas-down" : "bas-muted"}`}>
+                      {formatPct(a.metrics.pnlPct)}
+                    </span>
+                  ) : null}
                 </td>
                 <td className="num py-3">{formatUsd(a.priceUsd)}</td>
                 <td className="py-3 text-right">
@@ -282,20 +284,36 @@ function AgentMobileCard({ agent: a }: { agent: MarketplaceAgent }) {
       </p>
       <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
         <div>
-          <div className="text-bas-muted">Win</div>
-          <div className="num">{a.metrics.winRate != null ? `${a.metrics.winRate.toFixed(1)}%` : "—"}</div>
+          <div className="text-bas-muted">Score</div>
+          <div className="num">{a.totalScore ? a.totalScore.toFixed(1) : ""}</div>
         </div>
         <div>
-          <div className="text-bas-muted">PnL</div>
-          <div className={`num text-bas-${pnlTone(a.metrics.pnlPct) === "up" ? "up" : pnlTone(a.metrics.pnlPct) === "down" ? "down" : "muted"}`}>
-            {formatPct(a.metrics.pnlPct)}
-          </div>
+          <div className="text-bas-muted">Feedback</div>
+          <div className="num">{a.feedbackCount ? String(a.feedbackCount) : ""}</div>
         </div>
         <div>
-          <div className="text-bas-muted">Venue</div>
-          <div className="truncate">{a.metrics.venue ?? "—"}</div>
+          <div className="text-bas-muted">x402</div>
+          <div>{a.x402 ? "Yes" : "No"}</div>
         </div>
       </div>
+      {a.metrics.winRate != null || a.metrics.pnlPct != null ? (
+        <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
+          {a.metrics.winRate != null ? (
+            <div>
+              <div className="text-bas-muted">Win</div>
+              <div className="num">{a.metrics.winRate.toFixed(1)}%</div>
+            </div>
+          ) : null}
+          {a.metrics.pnlPct != null ? (
+            <div>
+              <div className="text-bas-muted">PnL</div>
+              <div className={`num text-bas-${pnlTone(a.metrics.pnlPct) === "up" ? "up" : pnlTone(a.metrics.pnlPct) === "down" ? "down" : "muted"}`}>
+                {formatPct(a.metrics.pnlPct)}
+              </div>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
       <div className="mt-3 flex gap-2">
         <button
           type="button"

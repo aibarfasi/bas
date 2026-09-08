@@ -1,4 +1,4 @@
-import { pancakeYieldBoard, quotePancakeSwap } from "@/lib/pancake/quote";
+import { pancakePoolGap, pancakeYieldBoard, quotePancakeSwap } from "@/lib/pancake/quote";
 import { putPayment } from "@/lib/x402/receipts";
 import { NextResponse } from "next/server";
 
@@ -86,6 +86,7 @@ export async function POST(
   }
   const quote = await quotePancakeSwap({ amountIn: body.amountIn });
   const yields = pancakeYieldBoard();
+  const gap = pancakePoolGap();
   const recipient = body.recipient ?? "hirer";
 
   const work: Record<string, unknown> = {
@@ -112,11 +113,15 @@ export async function POST(
     },
     yield: {
       title: "Yield ranking",
-      summary: `${yields[0].pool} leads at ${yields[0].totalApr.toFixed(1)}% total APR (fees + CAKE).`,
-      outputs: yields.slice(0, 3).map((y) => ({
-        label: y.pool,
-        value: `${y.totalApr.toFixed(1)}% APR`,
-      })),
+      summary: `${yields[0].pool} leads at ${yields[0].totalApr.toFixed(1)}% total APR (fees + CAKE). Gap: ${gap.pair} ${gap.feeTier}.`,
+      outputs: [
+        ...yields.slice(0, 3).map((y) => ({
+          label: y.pool,
+          value: `${y.totalApr.toFixed(1)}% APR`,
+        })),
+        { label: "Pool gap", value: `${gap.pair} ${gap.feeTier}` },
+        { label: "Why a new pool", value: gap.why },
+      ],
     },
     health: {
       title: "Health-factor brief",

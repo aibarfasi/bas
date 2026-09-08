@@ -6,8 +6,9 @@
 - [x] `/docs/judges` works on a phone
 - [x] Hire Grid Pilot without a wallet (demo) and with an injected wallet
 - [x] Session revoke + public receipt visible
-- [x] `/advantage` has trade, security, yield, equities
-- [x] Monitoring label on Range Guard (brief: monitoring agents)
+- [x] Public `/proofs` (fixtures + live, no admin)
+- [x] `/advantage` has trade, security, yield, equities + JSON attachments
+- [x] Monitoring label on Range Guard (brief: monitoring agents; rubric: rebalancing)
 - [ ] After `bag deploy`, paste ERC-8004 token ids and Altana KeyStore txs here
 
 ## Live agents (hire-ready)

@@ -21,6 +21,7 @@ export function Footer({ light = false }: { light?: boolean }) {
         </div>
         <div className="flex flex-wrap gap-4 text-xs">
           <Link href="/docs/judges">Judge path</Link>
+          <Link href="/proofs">Proofs</Link>
           <Link href="/admin">Operator</Link>
           <Link href="/advantage">Agent Advantage Report</Link>
           <a href="https://www.bnbchain.org/en/hackathons/smart-money-era">

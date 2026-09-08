@@ -7,7 +7,7 @@ BAS is a marketplace, not a portfolio of bots.
 | Criterion | Where to look |
 | --- | --- |
 | Functionality | `/` → `/market?cat=*` → `/agent/97/bas-grid` → `/hire/97-bas-grid` → `/session/*`. Demo mode never dead-ends. |
-| Data quality | 8004scan catalog + score, feedback, win rate, window, drawdown, venue, live probe. Uncategorized stays visible. |
+| Data quality | 8004scan catalog + score, feedback, x402, live. Category search. Uncategorized stays visible. Win/PnL only when the operator published them. |
 | Agent diversity | Monitoring (Range Guard), grid, yield, health share one template. Home tiles are equal. |
 
 ## TermiX

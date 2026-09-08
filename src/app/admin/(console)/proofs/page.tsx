@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { CopyText } from "@/components/admin/CopyText";
 import { PageHeader } from "@/components/admin/PageHeader";
+import { Chip, ChipRow, EmptyState, FieldInput, ResponsiveTable } from "@/components/admin/ResponsiveTable";
 import { Button } from "@/components/ui/Button";
 import { adminFetch } from "@/lib/admin/client";
 import { downloadCsv } from "@/lib/admin/csv";
@@ -72,98 +74,94 @@ export default function AdminProofsPage() {
           </Button>
         }
       />
-      <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={() => setTab("altana")}
-            className={`h-9 rounded-[6px] px-3 text-sm ${
-              tab === "altana" ? "bg-bas-primary text-bas-on-primary" : "bg-bas-card"
-            }`}
-          >
+      <div className="mt-5 space-y-3">
+        <ChipRow>
+          <Chip active={tab === "altana"} onClick={() => setTab("altana")}>
             Altana ({receipts.length})
-          </button>
-          <button
-            type="button"
-            onClick={() => setTab("x402")}
-            className={`h-9 rounded-[6px] px-3 text-sm ${
-              tab === "x402" ? "bg-bas-primary text-bas-on-primary" : "bg-bas-card"
-            }`}
-          >
+          </Chip>
+          <Chip active={tab === "x402"} onClick={() => setTab("x402")}>
             x402 ({payments.length})
-          </button>
-        </div>
-        <input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Search proofs"
-          className="h-9 w-full max-w-sm rounded-[6px] border border-bas-hairline bg-bas-canvas px-3 text-sm"
-        />
+          </Chip>
+        </ChipRow>
+        <FieldInput value={q} onChange={setQ} placeholder="Search proofs" />
       </div>
       {error ? <p className="mt-3 text-sm text-bas-down">{error}</p> : null}
 
       {tab === "altana" ? (
-        <div className="mt-4 overflow-x-auto">
-          <table className="w-full min-w-[760px] text-left text-sm">
-            <thead className="text-xs text-bas-muted">
-              <tr>
-                <th className="pb-2 font-medium">Action</th>
-                <th className="pb-2 font-medium">Agent</th>
-                <th className="pb-2 font-medium">Wallet</th>
-                <th className="pb-2 font-medium">When</th>
-              </tr>
-            </thead>
-            <tbody>
-              {shownReceipts.map((r) => (
-                <tr key={r.id} className="border-t border-bas-hairline">
-                  <td className="py-3">
-                    {r.action}
-                    {r.demo ? <span className="ml-2 text-xs text-bas-muted">demo</span> : null}
-                    <div className="num text-xs text-bas-muted">{r.id}</div>
-                  </td>
-                  <td>{r.agentName}</td>
-                  <td>
-                    <a href={r.explorer} className="num text-xs text-bas-primary">
-                      {shortAddr(r.wallet)}
-                    </a>
-                  </td>
-                  <td className="num text-xs text-bas-muted">{timeAgo(new Date(r.createdAt).toISOString())}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {shownReceipts.length === 0 ? (
-            <p className="mt-4 text-sm text-bas-muted">No receipts on this instance yet.</p>
-          ) : null}
-        </div>
+        <ResponsiveTable
+          rows={shownReceipts}
+          rowKey={(r) => r.id}
+          mobilePrimary={(r) => `${r.action} · ${r.agentName}`}
+          mobileSecondary={(r) => (
+            <div className="flex flex-wrap gap-2">
+              <CopyText value={r.id} />
+              <a href={r.explorer} className="text-bas-primary">
+                {shortAddr(r.wallet)}
+              </a>
+            </div>
+          )}
+          columns={[
+            {
+              label: "Action",
+              cell: (r) => (
+                <>
+                  {r.action}
+                  {r.demo ? <span className="ml-2 text-xs text-bas-muted">demo</span> : null}
+                  <div>
+                    <CopyText value={r.id} />
+                  </div>
+                </>
+              ),
+            },
+            { label: "Agent", cell: (r) => r.agentName },
+            {
+              label: "Wallet",
+              cell: (r) => (
+                <a href={r.explorer} className="num text-xs text-bas-primary">
+                  {shortAddr(r.wallet)}
+                </a>
+              ),
+            },
+            { label: "When", cell: (r) => <span className="num text-xs text-bas-muted">{timeAgo(new Date(r.createdAt).toISOString())}</span> },
+          ]}
+          empty={<EmptyState title="No receipts" body="Hire or revoke a session on this instance." />}
+        />
       ) : (
-        <div className="mt-4 overflow-x-auto">
-          <table className="w-full min-w-[760px] text-left text-sm">
-            <thead className="text-xs text-bas-muted">
-              <tr>
-                <th className="pb-2 font-medium">Payment</th>
-                <th className="pb-2 font-medium">Kind</th>
-                <th className="pb-2 font-medium">Amount</th>
-                <th className="pb-2 font-medium">Recipient</th>
-              </tr>
-            </thead>
-            <tbody>
-              {shownPayments.map((p) => (
-                <tr key={p.id} className="border-t border-bas-hairline">
-                  <td className="py-3">
-                    <div className="num text-xs">{p.id}</div>
-                    <div className="text-xs text-bas-muted">{p.facilitator}</div>
-                  </td>
-                  <td>{p.kind}</td>
-                  <td className="num">
-                    ${p.amountUsd} {p.asset}
-                  </td>
-                  <td className="num text-xs">{p.recipient}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <ResponsiveTable
+          rows={shownPayments}
+          rowKey={(p) => p.id}
+          mobilePrimary={(p) => p.kind}
+          mobileSecondary={(p) => (
+            <div className="flex flex-wrap gap-2">
+              <span className="num">
+                ${p.amountUsd} {p.asset}
+              </span>
+              <CopyText value={p.id} />
+            </div>
+          )}
+          columns={[
+            {
+              label: "Payment",
+              cell: (p) => (
+                <>
+                  <CopyText value={p.id} />
+                  <div className="text-xs text-bas-muted">{p.facilitator}</div>
+                </>
+              ),
+            },
+            { label: "Kind", cell: (p) => p.kind },
+            {
+              label: "Amount",
+              cell: (p) => (
+                <span className="num">
+                  ${p.amountUsd} {p.asset}
+                </span>
+              ),
+            },
+            { label: "Recipient", cell: (p) => <span className="num text-xs">{p.recipient}</span> },
+          ]}
+          empty={<EmptyState title="No payments" body="x402 receipts appear after a hire." />}
+        />
       )}
     </div>
   );

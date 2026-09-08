@@ -19,7 +19,8 @@ Official form: https://forms.gle/9g9XPNFwnYaHAz9L8
 1. Open `/docs/judges`
 2. Market → Grid → BAS Grid Pilot → Hire (demo is fine)
 3. Session: cap, expiry, allowlist, public receipt, Revoke
-4. `/advantage` for trade + security + yield + equities
+4. `/proofs` for Altana + x402 receipts (no admin)
+5. `/advantage` for trade + security + yield + equities (download JSON)
 
 ## Onchain / explorer
 

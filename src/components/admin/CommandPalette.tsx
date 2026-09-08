@@ -28,9 +28,13 @@ export function CommandPalette({
 }) {
   const router = useRouter();
   const [q, setQ] = useState("");
+  const [active, setActive] = useState(0);
 
   useEffect(() => {
-    if (!open) setQ("");
+    if (!open) {
+      setQ("");
+      setActive(0);
+    }
   }, [open]);
 
   const rows = useMemo(() => {
@@ -38,35 +42,48 @@ export function CommandPalette({
     return ACTIONS.filter((a) => `${a.label} ${a.hint}`.toLowerCase().includes(n));
   }, [q]);
 
+  useEffect(() => {
+    setActive(0);
+  }, [q]);
+
   if (!open) return null;
 
+  function go(href: string) {
+    router.push(href);
+    onClose();
+  }
+
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 px-4 pt-24">
-      <div className="w-full max-w-lg overflow-hidden rounded-[12px] border border-bas-hairline bg-bas-canvas">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 sm:items-start sm:px-4 sm:pt-24">
+      <div className="w-full max-w-lg overflow-hidden rounded-t-[16px] border border-bas-hairline bg-bas-canvas sm:rounded-[12px]">
         <input
           autoFocus
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Jump to a page or action"
-          className="h-12 w-full border-b border-bas-hairline bg-transparent px-4 text-sm text-bas-heading outline-none"
+          className="h-14 w-full border-b border-bas-hairline bg-transparent px-4 text-base text-bas-heading outline-none sm:h-12 sm:text-sm"
           onKeyDown={(e) => {
             if (e.key === "Escape") onClose();
-            if (e.key === "Enter" && rows[0]) {
-              router.push(rows[0].href);
-              onClose();
+            if (e.key === "ArrowDown") {
+              e.preventDefault();
+              setActive((i) => Math.min(rows.length - 1, i + 1));
             }
+            if (e.key === "ArrowUp") {
+              e.preventDefault();
+              setActive((i) => Math.max(0, i - 1));
+            }
+            if (e.key === "Enter" && rows[active]) go(rows[active].href);
           }}
         />
-        <ul className="max-h-80 overflow-y-auto p-2">
-          {rows.map((a) => (
+        <ul className="max-h-[50dvh] overflow-y-auto p-2 sm:max-h-80">
+          {rows.map((a, i) => (
             <li key={a.href}>
               <button
                 type="button"
-                className="flex w-full items-center justify-between rounded-[6px] px-3 py-2 text-left text-sm hover:bg-bas-card"
-                onClick={() => {
-                  router.push(a.href);
-                  onClose();
-                }}
+                className={`flex min-h-12 w-full items-center justify-between rounded-[6px] px-3 py-2 text-left text-sm ${
+                  i === active ? "bg-bas-card" : "hover:bg-bas-card"
+                }`}
+                onClick={() => go(a.href)}
               >
                 <span className="text-bas-heading">{a.label}</span>
                 <span className="text-xs text-bas-muted">{a.hint}</span>

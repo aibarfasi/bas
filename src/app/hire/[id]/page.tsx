@@ -10,7 +10,8 @@ import type { MarketplaceAgent } from "@/lib/agents/types";
 import { buildSession, grantTypedData } from "@/lib/altana/sessions";
 import { useHireStore } from "@/lib/hire/store";
 import { hireKind } from "@/lib/hire/kind";
-import { parseHireId, shortAddr } from "@/lib/format";
+import { parseHireId, publishedX402, shortAddr } from "@/lib/format";
+import { categoryHirePath } from "@/lib/categories";
 import { PANCAKE_ALLOWLIST } from "@/lib/pancake/allowlist";
 
 const STEPS = ["Wallet", "Session", "Pay", "Work"] as const;
@@ -48,10 +49,11 @@ export default function HirePage({ params }: { params: Promise<{ id: string }> }
 
   const policy = useMemo(() => {
     if (!agent) return null;
+    const hireable = agent.hireable;
     return {
       wallet: agent.policy?.wallet ?? agent.agentWallet ?? agent.owner,
-      allowlist: agent.policy?.allowlist ?? PANCAKE_ALLOWLIST,
-      spendCap: cap,
+      allowlist: agent.policy?.allowlist ?? (hireable ? PANCAKE_ALLOWLIST : []),
+      spendCap: hireable ? cap : "0",
       spendToken: agent.policy?.spendToken ?? "BNB",
       expiryHours: hours,
     };
@@ -73,20 +75,26 @@ export default function HirePage({ params }: { params: Promise<{ id: string }> }
     );
   }
 
-  if (!agent.hireable) {
+  const x402Url = publishedX402(agent);
+  if (!agent.hireable && !x402Url) {
     return (
       <AppShell light>
-        <h1 className="text-2xl font-semibold">Not hireable</h1>
-        <p className="mt-2 text-sm text-bas-muted">
-          This 8004scan record has no payable face. Hire the BAS sellers from the
-          market — they complete end to end.
+        <h1 className="text-2xl font-semibold">No payable face on this record</h1>
+        <p className="mt-2 max-w-xl text-sm text-bas-muted">
+          This 8004scan agent does not publish x402. Hire the BAS seller in the
+          same category — that path completes end to end, including demo mode.
         </p>
-        <Button href="/market" className="mt-4">
-          Back to market
-        </Button>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Button href={categoryHirePath(agent.category)}>Hire BAS seller</Button>
+          <Button href="/market" variant="secondary">
+            Back to market
+          </Button>
+        </div>
       </AppShell>
     );
   }
+
+  const externalX402 = !agent.hireable && Boolean(x402Url);
 
   async function finish() {
     if (!agent || !policy) return;
@@ -139,22 +147,48 @@ export default function HirePage({ params }: { params: Promise<{ id: string }> }
       draft.ledgerId = ledger.receipt?.id ?? null;
 
       const kind = hireKind(agent);
-      const paid = await fetch(`/api/hire/faces/${kind}/x402`, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          payment: grantSig ?? "demo",
-          recipient: address ?? "hirer",
-        }),
-      }).then((r) => r.json());
+      const x402Url = publishedX402(agent);
+      let paid: {
+        receipt?: { id?: string };
+        result?: { title?: string; summary?: string; outputs?: { label: string; value: string }[] };
+        error?: string;
+        ok?: boolean;
+        status?: number;
+      };
+      if (!agent.hireable && x402Url) {
+        paid = await fetch("/api/hire/x402-try", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ endpoint: x402Url, payment: grantSig ?? "demo" }),
+        }).then((r) => r.json());
+        if (!paid.ok && paid.status !== 200) {
+          throw new Error(
+            paid.error ||
+              `Published x402 returned ${paid.status ?? "an error"}. Hire the BAS seller in this category instead.`,
+          );
+        }
+      } else {
+        paid = await fetch(`/api/hire/faces/${kind}/x402`, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            payment: grantSig ?? "demo",
+            recipient: address ?? "hirer",
+          }),
+        }).then((r) => r.json());
+      }
       draft.paymentId = paid.receipt?.id ?? null;
       upsertSession(draft);
 
       const result = paid.result as {
-        title: string;
-        summary: string;
-        outputs: { label: string; value: string }[];
-      };
+        title?: string;
+        summary?: string;
+        outputs?: { label: string; value: string }[];
+      } | undefined;
+
+      const outputs = Array.isArray(result?.outputs)
+        ? result.outputs
+        : [{ label: "Response", value: JSON.stringify(paid.result ?? paid).slice(0, 280) }];
 
       const job = {
         id: `job_${draft.id}`,
@@ -167,11 +201,12 @@ export default function HirePage({ params }: { params: Promise<{ id: string }> }
         startedAt: Date.now(),
         deliveredAt: Date.now(),
         deliverable: {
-          title: result.title,
-          summary: result.summary,
-          outputs: result.outputs,
+          title: result?.title ?? "x402 response",
+          summary: result?.summary ?? (agent.hireable ? "Job delivered." : "Raw response from the agent's published x402 face."),
+          outputs,
           recipient: address ?? "hirer (demo)",
           custody: "Agent never held user funds. Output recipient = you.",
+          raw: paid.result ?? paid,
         },
       };
       addJob(job);
@@ -193,9 +228,15 @@ export default function HirePage({ params }: { params: Promise<{ id: string }> }
       <p className="text-xs text-bas-muted">Hire · transactional</p>
       <h1 className="mt-2 text-3xl font-semibold">Hire {agent.name}</h1>
       <p className="mt-2 max-w-xl text-sm text-bas-muted">
-        Light canvas on purpose — this is the money step. Scope the session,
-        pay x402, keep custody.
+        {externalX402
+          ? "This record publishes its own x402 face. We call that endpoint and show whatever it returns. For a guaranteed demo, hire the BAS seller in this category instead."
+          : "Light canvas on purpose — this is the money step. Scope the session, pay x402, keep custody. After pay you land on the session page (revoke lives there)."}
       </p>
+      {externalX402 ? (
+        <Button href={categoryHirePath(agent.category)} variant="secondary" className="mt-3">
+          Hire BAS seller instead
+        </Button>
+      ) : null}
 
       <ol className="mt-6 flex gap-2 text-xs">
         {STEPS.map((s, i) => (

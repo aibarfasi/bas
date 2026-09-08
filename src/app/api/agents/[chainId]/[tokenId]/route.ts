@@ -12,7 +12,7 @@ export async function GET(
     return NextResponse.json({ error: "Agent not found" }, { status: 404 });
   }
   const endpoint = agent.services.find((s) => s.endpoint)?.endpoint;
-  if (endpoint) {
+  if (endpoint && !agent.liveLocked && agent.source !== "featured") {
     const live = await probeEndpoint(endpoint);
     agent.live = live.live;
     agent.liveReason = live.reason;

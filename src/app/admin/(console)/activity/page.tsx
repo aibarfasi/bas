@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { PageHeader } from "@/components/admin/PageHeader";
+import { FieldInput } from "@/components/admin/ResponsiveTable";
 import { adminFetch } from "@/lib/admin/client";
 import type { AuditEvent } from "@/lib/admin/types";
 import { timeAgo } from "@/lib/format";
@@ -26,12 +27,9 @@ export default function AdminActivityPage() {
   return (
     <div>
       <PageHeader title="Activity" desc="Operator audit trail for this runtime. Last 80 writes." />
-      <input
-        value={q}
-        onChange={(e) => setQ(e.target.value)}
-        placeholder="Filter action or detail"
-        className="mt-4 h-10 w-full max-w-md rounded-[6px] border border-bas-hairline bg-bas-canvas px-3 text-sm"
-      />
+      <div className="mt-4">
+        <FieldInput value={q} onChange={setQ} placeholder="Filter action or detail" />
+      </div>
       {error ? <p className="mt-3 text-sm text-bas-down">{error}</p> : null}
       <ul className="mt-6 divide-y divide-bas-hairline rounded-[12px] bg-bas-card">
         {rows.map((e) => (

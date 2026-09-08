@@ -6,7 +6,7 @@ export const CATEGORY_META: Record<
 > = {
   rebalance: {
     label: "Monitoring",
-    short: "Monitor",
+    short: "Rebalance",
     job: "Watches markets, wallets, and LP positions, then acts before the range or book goes idle.",
     pancake: "PancakeSwap V3 NFPM range watch + recenter. Fees keep accruing instead of going idle.",
   },
@@ -32,7 +32,7 @@ export const CATEGORY_META: Record<
 
 export const FILTERS: { id: CategoryFilter; label: string }[] = [
   { id: "all", label: "All" },
-  { id: "rebalance", label: "Monitoring" },
+  { id: "rebalance", label: "Monitoring / rebalance" },
   { id: "grid", label: "Grid trading" },
   { id: "yield", label: "Yield" },
   { id: "health", label: "Health factor" },
@@ -55,4 +55,24 @@ export function catQuery(id: CategoryFilter) {
   if (id === "all") return "";
   if (id === "rebalance") return "monitoring";
   return id;
+}
+
+export function categoryHirePath(cat: Category) {
+  if (cat === "rebalance") return "/hire/97-bas-rebalance";
+  if (cat === "health") return "/hire/97-bas-health";
+  if (cat === "yield") return "/hire/97-bas-yield";
+  return "/hire/97-bas-grid";
+}
+
+export function agentStory(agent: {
+  category: Category;
+  categoryReason: string;
+  job?: string;
+  pancake?: string;
+}) {
+  const cat = agent.category !== "uncategorized" ? CATEGORY_META[agent.category] : null;
+  return {
+    job: agent.job?.trim() || cat?.job || agent.categoryReason,
+    pancake: agent.pancake?.trim() || cat?.pancake || "",
+  };
 }

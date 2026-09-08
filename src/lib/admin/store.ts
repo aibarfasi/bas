@@ -10,6 +10,7 @@ import type {
   AuditEvent,
   SiteSettings,
 } from "@/lib/admin/types";
+import { draftToPatch } from "@/lib/admin/draft";
 import type { MarketplaceAgent } from "@/lib/agents/types";
 import type { HiredSession } from "@/lib/altana/sessions";
 import type { HireJob } from "@/lib/hire/types";
@@ -196,7 +197,8 @@ export function addCustomAgent(draft: AgentDraft): MarketplaceAgent {
   if (state().custom.some((a) => a.id === id)) {
     throw new Error(`Agent ${id} already exists`);
   }
-  const agent: MarketplaceAgent = {
+  const face = draft.category === "uncategorized" ? "yield" : draft.category;
+  const base: MarketplaceAgent = {
     id,
     tokenId: draft.tokenId,
     chainId: draft.chainId,
@@ -205,18 +207,19 @@ export function addCustomAgent(draft: AgentDraft): MarketplaceAgent {
     description: draft.description,
     owner: draft.owner,
     agentWallet: draft.agentWallet || draft.owner,
-    category: draft.category === "uncategorized" ? "uncategorized" : draft.category,
+    category: draft.category,
     categoryReason: draft.categoryReason || "Added from the BAS operator console.",
     featured: draft.featured,
     hireable: draft.hireable,
     live: draft.live,
     liveReason: draft.live ? "Marked live by operator." : "Marked down by operator.",
-    x402: draft.hireable,
-    protocols: draft.hireable ? ["A2A", "X402"] : [],
+    liveLocked: true,
+    x402: draft.x402,
+    protocols: [],
     services: draft.hireable
       ? [
-          { name: "a2a", endpoint: `/api/hire/faces/${draft.category === "uncategorized" ? "yield" : draft.category}/a2a`, version: "0.3.0" },
-          { name: "x402", endpoint: `/api/hire/faces/${draft.category === "uncategorized" ? "yield" : draft.category}/x402`, version: "1" },
+          { name: "a2a", endpoint: `/api/hire/faces/${face}/a2a`, version: "0.3.0" },
+          { name: "x402", endpoint: `/api/hire/faces/${face}/x402`, version: "1" },
         ]
       : [],
     totalScore: 0,
@@ -247,7 +250,10 @@ export function addCustomAgent(draft: AgentDraft): MarketplaceAgent {
     feedback: [],
     source: "featured",
   };
+  const agent = applyPatchToAgent(base, draftToPatch(id, draft));
+  agent.liveLocked = true;
   commit({ custom: [agent, ...state().custom] }, "agent.create", id);
+  if (draft.notes) putOverride({ id, notes: draft.notes });
   return agent;
 }
 
@@ -320,6 +326,30 @@ export function applyPatchToAgent(agent: MarketplaceAgent, patch?: AgentPatch): 
   if (patch.tokenId != null || patch.chainId != null) {
     next.id = `${next.chainId}-${next.tokenId}`;
   }
+  if (patch.job != null) next.job = patch.job;
+  if (patch.pancake != null) next.pancake = patch.pancake;
+  if (patch.liveReason != null) next.liveReason = patch.liveReason;
+  if (patch.live !== undefined) next.liveLocked = true;
+  if (patch.x402 != null) next.x402 = patch.x402;
+  if (patch.protocols) next.protocols = patch.protocols;
+  if (patch.totalScore != null) next.totalScore = patch.totalScore;
+  if (patch.averageScore != null) next.averageScore = patch.averageScore;
+  if (patch.feedbackCount != null) next.feedbackCount = patch.feedbackCount;
+  if (patch.healthScore !== undefined) next.healthScore = patch.healthScore;
+  if (patch.imageUrl !== undefined) next.imageUrl = patch.imageUrl;
+  if (patch.feedback) {
+    next.feedback = patch.feedback;
+    if (patch.feedbackCount == null) next.feedbackCount = patch.feedback.length;
+  }
+  const metrics = { ...next.metrics };
+  if (patch.winRate !== undefined) metrics.winRate = patch.winRate;
+  if (patch.window !== undefined) metrics.window = patch.window;
+  if (patch.maxDrawdown !== undefined) metrics.maxDrawdown = patch.maxDrawdown;
+  if (patch.fills !== undefined) metrics.fills = patch.fills;
+  if (patch.pnlPct !== undefined) metrics.pnlPct = patch.pnlPct;
+  if (patch.risk !== undefined) metrics.risk = patch.risk;
+  if (patch.venue !== undefined) metrics.venue = patch.venue;
+  next.metrics = metrics;
   if (
     patch.spendCap != null ||
     patch.spendToken != null ||

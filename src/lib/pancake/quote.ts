@@ -92,6 +92,20 @@ export type YieldRow = {
   note: string;
 };
 
+export type PoolGap = {
+  pair: string;
+  feeTier: string;
+  why: string;
+};
+
+export function pancakePoolGap(): PoolGap {
+  return {
+    pair: "WBNB / USD1",
+    feeTier: "0.05%",
+    why: "Spot BNB volume is thick while the on-chain 0.05% WBNB/USD1 book is thin versus WBNB/USDT 0.25%. A new 0.05% WBNB/USD1 pool would keep fee flow on Pancake instead of leaking to CEX pairs.",
+  };
+}
+
 export function pancakeYieldBoard(): YieldRow[] {
   return [
     {

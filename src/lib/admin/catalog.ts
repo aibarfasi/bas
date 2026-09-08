@@ -66,6 +66,14 @@ export function findResolved(chainId: number, tokenId: string) {
   );
 }
 
+export function resolvePublicAgent(agent: MarketplaceAgent | null) {
+  if (!agent) return null;
+  if (isHidden(agent.id)) return null;
+  const patched = applyPatchToAgent(applyDeploy(agent), getOverrides()[agent.id]);
+  if (isHidden(patched.id)) return null;
+  return patched;
+}
+
 export function isHidden(id: string) {
   return Boolean(getOverrides()[id]?.hidden);
 }

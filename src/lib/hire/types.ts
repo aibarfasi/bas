@@ -14,5 +14,6 @@ export type HireJob = {
     outputs: { label: string; value: string }[];
     recipient: string;
     custody: string;
+    raw?: unknown;
   };
 };
