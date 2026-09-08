@@ -1,15 +1,15 @@
 # Intake form copy (tick all tracks)
 
-Submit at the official Build the Era form before 9 Sep 2026:
-https://www.bnbchain.org/en/hackathons/smart-money-era
+Official form: https://forms.gle/9g9XPNFwnYaHAz9L8
 
 ## Project
 
 - **Name:** BAS — BNB Agent Studio Marketplace
 - **One liner:** Find, compare, and hire ERC-8004 agents on BSC without giving them your funds.
-- **Live URL:** https://temporary-prompt-quartz-dfjtntp.vercel.app (claim to keep: https://vercel.com/claim-deployment?code=2eede8c3-7de2-4c09-abcc-8e8d716df0e4)
-- **Repo:** (push this folder to GitHub, then paste the URL)
-- **Tracks:** Main · TermiX · Altana · PancakeSwap
+- **Live URL:** https://bas-sigma-eight.vercel.app
+- **Repo:** https://github.com/aibarfasi/bas
+- **Tracks ticked on the form:** PancakeSwap · AltLayer · TermiX (Altana is not a checkbox; called out in the description)
+- **Prize wallet:** `0xFFF78E63181220Ca6F5FaA76bec1D2FaC01035A8`
 
 ## Demo script
 

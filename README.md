@@ -29,17 +29,13 @@ npm run dev
 
 Open http://localhost:3000
 
-## Deploy (Vercel)
+## Live
 
-Anonymous preview (expires unless claimed):
-
-- App: https://temporary-prompt-quartz-dfjtntp.vercel.app
-- Claim: https://vercel.com/claim-deployment?code=2eede8c3-7de2-4c09-abcc-8e8d716df0e4
-
-Then keep a production URL up through 23 Sep 2026:
+- App: https://bas-sigma-eight.vercel.app
+- Repo: https://github.com/aibarfasi/bas
+- Intake: https://forms.gle/9g9XPNFwnYaHAz9L8
 
 ```bash
-npx vercel login
 npx vercel --prod
 ```
 
