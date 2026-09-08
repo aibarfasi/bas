@@ -1,0 +1,251 @@
+import { PANCAKE_ALLOWLIST } from "@/lib/pancake/allowlist";
+import type { MarketplaceAgent } from "@/lib/agents/types";
+
+const REGISTRY_TESTNET = "0x8004A818BFB912233c491871b3d84c89A494BD9e";
+
+function policy(wallet: string): MarketplaceAgent["policy"] {
+  return {
+    wallet,
+    allowlist: PANCAKE_ALLOWLIST,
+    spendCap: "0.05",
+    spendToken: "BNB",
+    expiryHours: 24,
+  };
+}
+
+export const FEATURED_AGENTS: MarketplaceAgent[] = [
+  {
+    id: "97-bas-rebalance",
+    tokenId: "bas-rebalance",
+    chainId: 97,
+    registry: REGISTRY_TESTNET,
+    name: "BAS Range Guard",
+    description:
+      "Watches a PancakeSwap V3 LP NFT and recenters the range when price walks to the edge, so the position keeps earning fees instead of going idle.",
+    owner: "0x7bA5D3e4F1c2A90d8E6C4B3A1F9D2E8C7A6B5D4E",
+    agentWallet: "0x4a1A2b3C4d5E6f708192a3B4c5D6e7F8091A2B3C",
+    category: "rebalance",
+    categoryReason: "First-class BAS reference agent for LP range management.",
+    featured: true,
+    hireable: true,
+    live: true,
+    liveReason: "A2A card + x402 face responding on the BAS seller runtime.",
+    x402: true,
+    protocols: ["A2A", "X402", "ERC-8183"],
+    services: [
+      { name: "a2a", endpoint: "/api/hire/faces/rebalance/a2a", version: "0.3.0" },
+      { name: "x402", endpoint: "/api/hire/faces/rebalance/x402", version: "1" },
+    ],
+    totalScore: 88.4,
+    averageScore: 91,
+    feedbackCount: 14,
+    healthScore: 97,
+    verified: true,
+    createdAt: "2026-08-12T08:00:00Z",
+    txHash: "0xbasrebalance000000000000000000000000000000000000000000000000001",
+    imageUrl: null,
+    metrics: {
+      winRate: 81.2,
+      window: "30d",
+      maxDrawdown: 4.1,
+      fills: 126,
+      pnlPct: 9.4,
+      risk: "Bounded range, no inventory",
+      venue: "PancakeSwap V3 NFPM",
+    },
+    policy: policy("0x4a1A2b3C4d5E6f708192a3B4c5D6e7F8091A2B3C"),
+    priceUsd: 0.25,
+    feedback: [
+      {
+        client: "0x91a2…c44d",
+        score: 94,
+        tag: "quality",
+        comment: "Recenters before fees die. NFT never left my wallet.",
+        at: "2026-09-02T11:20:00Z",
+      },
+      {
+        client: "0x33f0…91ab",
+        score: 88,
+        tag: "safety",
+        comment: "Allowlist is only NFPM. Revoke worked in one click.",
+        at: "2026-08-28T16:04:00Z",
+      },
+    ],
+    source: "featured",
+  },
+  {
+    id: "97-bas-grid",
+    tokenId: "bas-grid",
+    chainId: 97,
+    registry: REGISTRY_TESTNET,
+    name: "BAS Grid Pilot",
+    description:
+      "Runs a two-sided grid on BNB/USDT through PancakeSwap Smart Router. Every fill delivers the output token to the hirer's address. The agent never holds inventory.",
+    owner: "0x7bA5D3e4F1c2A90d8E6C4B3A1F9D2E8C7A6B5D4E",
+    agentWallet: "0x5b2B3c4D5e6F708192A3b4C5d6E7f8091A2b3C4D",
+    category: "grid",
+    categoryReason: "First-class BAS reference agent for automated grid orders.",
+    featured: true,
+    hireable: true,
+    live: true,
+    liveReason: "Smart Router quote + x402 face live. minOut never 0.",
+    x402: true,
+    protocols: ["A2A", "X402", "ERC-8183"],
+    services: [
+      { name: "a2a", endpoint: "/api/hire/faces/grid/a2a", version: "0.3.0" },
+      { name: "x402", endpoint: "/api/hire/faces/grid/x402", version: "1" },
+    ],
+    totalScore: 86.1,
+    averageScore: 89,
+    feedbackCount: 22,
+    healthScore: 95,
+    verified: true,
+    createdAt: "2026-08-12T08:10:00Z",
+    txHash: "0xbasgrid000000000000000000000000000000000000000000000000000002",
+    imageUrl: null,
+    metrics: {
+      winRate: 63.5,
+      window: "30d",
+      maxDrawdown: 6.8,
+      fills: 412,
+      pnlPct: 7.1,
+      risk: "0.5% minOut floor, 20m deadline",
+      venue: "PancakeSwap Smart Router",
+    },
+    policy: policy("0x5b2B3c4D5e6F708192A3b4C5d6E7f8091A2b3C4D"),
+    priceUsd: 0.15,
+    feedback: [
+      {
+        client: "0xaa10…77e2",
+        score: 90,
+        tag: "speed",
+        comment: "Filled inside the band. USDT landed in my wallet, not the bot.",
+        at: "2026-09-05T09:41:00Z",
+      },
+    ],
+    source: "featured",
+  },
+  {
+    id: "97-bas-yield",
+    tokenId: "bas-yield",
+    chainId: 97,
+    registry: REGISTRY_TESTNET,
+    name: "BAS Yield Router",
+    description:
+      "Compares CAKE emissions plus swap fees across Pancake farms and returns a ranked move plan. Execution, if you approve it, sends LP to the winning pool — never through the agent wallet.",
+    owner: "0x7bA5D3e4F1c2A90d8E6C4B3A1F9D2E8C7A6B5D4E",
+    agentWallet: "0x6c3C4d5E6f708192A3B4c5D6e7F8091A2B3c4D5E",
+    category: "yield",
+    categoryReason: "First-class BAS reference agent for yield routing.",
+    featured: true,
+    hireable: true,
+    live: true,
+    liveReason: "Farm scan + ERC-8183 research deliverable on IPFS-style storage.",
+    x402: true,
+    protocols: ["A2A", "X402", "ERC-8183"],
+    services: [
+      { name: "a2a", endpoint: "/api/hire/faces/yield/a2a", version: "0.3.0" },
+      { name: "x402", endpoint: "/api/hire/faces/yield/x402", version: "1" },
+    ],
+    totalScore: 84.7,
+    averageScore: 87,
+    feedbackCount: 11,
+    healthScore: 93,
+    verified: true,
+    createdAt: "2026-08-12T08:20:00Z",
+    txHash: "0xbasyield00000000000000000000000000000000000000000000000000003",
+    imageUrl: null,
+    metrics: {
+      winRate: 74.0,
+      window: "30d",
+      maxDrawdown: 2.2,
+      fills: 48,
+      pnlPct: 11.8,
+      risk: "Research-first. Moves only after you sign.",
+      venue: "PancakeSwap MasterChef V3",
+    },
+    policy: policy("0x6c3C4d5E6f708192A3B4c5D6e7F8091A2B3c4D5E"),
+    priceUsd: 0.2,
+    feedback: [
+      {
+        client: "0x0c88…12f1",
+        score: 86,
+        tag: "accuracy",
+        comment: "Caught a CAKE farm that beat my idle USDT vault by 6.2% APR.",
+        at: "2026-09-01T18:12:00Z",
+      },
+    ],
+    source: "featured",
+  },
+  {
+    id: "97-bas-health",
+    tokenId: "bas-health",
+    chainId: 97,
+    registry: REGISTRY_TESTNET,
+    name: "BAS Health Sentinel",
+    description:
+      "Reads Venus- and Lista-style debt, computes health factor, and returns a liquidation-risk brief plus a recommended repay or add-collateral action. No funds move unless you sign later.",
+    owner: "0x7bA5D3e4F1c2A90d8E6C4B3A1F9D2E8C7A6B5D4E",
+    agentWallet: "0x7d4D5e6F708192A3b4C5d6E7f8091A2B3c4D5e6F",
+    category: "health",
+    categoryReason: "First-class BAS reference agent for liquidation defense.",
+    featured: true,
+    hireable: true,
+    live: true,
+    liveReason: "Read-only chain tools + ERC-8183 brief. Security category for TermiX.",
+    x402: true,
+    protocols: ["A2A", "X402", "ERC-8183"],
+    services: [
+      { name: "a2a", endpoint: "/api/hire/faces/health/a2a", version: "0.3.0" },
+      { name: "x402", endpoint: "/api/hire/faces/health/x402", version: "1" },
+    ],
+    totalScore: 90.2,
+    averageScore: 93,
+    feedbackCount: 19,
+    healthScore: 99,
+    verified: true,
+    createdAt: "2026-08-12T08:30:00Z",
+    txHash: "0xbashealth0000000000000000000000000000000000000000000000000004",
+    imageUrl: null,
+    metrics: {
+      winRate: 96.0,
+      window: "30d",
+      maxDrawdown: 0.4,
+      fills: 73,
+      pnlPct: null,
+      risk: "Read-only. Cannot spend.",
+      venue: "Venus / Lista (read)",
+    },
+    policy: {
+      wallet: "0x7d4D5e6F708192A3b4C5d6E7f8091A2B3c4D5e6F",
+      allowlist: [],
+      spendCap: "0",
+      spendToken: "BNB",
+      expiryHours: 6,
+    },
+    priceUsd: 0.1,
+    feedback: [
+      {
+        client: "0xbe21…009c",
+        score: 97,
+        tag: "safety",
+        comment: "Flagged a 1.08 HF an hour before Venus would have eaten it.",
+        at: "2026-09-06T07:05:00Z",
+      },
+    ],
+    source: "featured",
+  },
+];
+
+export function getFeatured(chainId?: number, tokenId?: string) {
+  if (chainId == null || tokenId == null) return FEATURED_AGENTS;
+  return FEATURED_AGENTS.filter(
+    (a) => a.chainId === chainId && a.tokenId === tokenId,
+  );
+}
+
+export function findFeatured(chainId: number, tokenId: string) {
+  return FEATURED_AGENTS.find(
+    (a) => a.chainId === chainId && a.tokenId === tokenId,
+  );
+}

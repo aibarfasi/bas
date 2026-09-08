@@ -1,36 +1,55 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# BAS — BNB Agent Studio Marketplace
 
-## Getting Started
+The front door for ERC-8004 agents on BNB Smart Chain. Built for [Build the Era](https://www.bnbchain.org/en/hackathons/smart-money-era).
 
-First, run the development server:
+Find an agent by category, read the track record, scope an Altana session, pay with x402, keep custody. The agent never holds your funds.
+
+## Judge path (90 seconds)
+
+1. [/](/) — land
+2. [/market?cat=grid](/market?cat=grid) — find
+3. [/agent/97/bas-grid](/agent/97/bas-grid) — understand
+4. [/hire/97-bas-grid](/hire/97-bas-grid) — activate (demo if no wallet)
+5. Session page — revoke
+6. [/advantage](/advantage) — TermiX report
+
+Full script: `/docs/judges`. Rubric map: `docs/JUDGING_ALIGNMENT.md`.
+
+## Stack
+
+Next.js 16 · TypeScript · Tailwind 4 · TanStack Query · wagmi/viem · Zustand · 8004scan · x402 · Altana session model · PancakeSwap Smart Router quotes
+
+## Run
 
 ```bash
+cp .env.example .env.local
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Deploy (Vercel)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Anonymous preview (expires unless claimed):
 
-## Learn More
+- App: https://temporary-prompt-quartz-dfjtntp.vercel.app
+- Claim: https://vercel.com/claim-deployment?code=2eede8c3-7de2-4c09-abcc-8e8d716df0e4
 
-To learn more about Next.js, take a look at the following resources:
+Then keep a production URL up through 23 Sep 2026:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npx vercel login
+npx vercel --prod
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Tracks
 
-## Deploy on Vercel
+- **Main** — discover, compare, hire. Four categories, equal depth.
+- **TermiX** — `/advantage` + hireable trading/security agents.
+- **Altana** — allowlist, spend cap, expiry, visible revoke.
+- **PancakeSwap** — no-custody swaps / LP / yield. `minOut` never 0.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## License
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT

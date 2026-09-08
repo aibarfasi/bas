@@ -1,0 +1,12 @@
+[project]
+name = "bas-yield-router"
+network = "bsc-testnet"
+wallet = "altana"
+protocols = ["a2a", "x402"]
+
+[payments.x402]
+price_usd = "0.20"
+
+[policy]
+spend_cap_bnb = "0.05"
+expiry_hours = 24
